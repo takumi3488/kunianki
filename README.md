@@ -22,6 +22,23 @@ On Linux, install `build-essential`, `libxcb-shape0-dev`, `libxcb-xfixes0-dev`, 
 
 Run unit and headless end-to-end tests with `cargo test`.
 
+Native Android smoke tests run on an API 36 Emulator in CI. They use real accessibility/touch input and check progress after an app restart; screenshots and UI dumps are attached to the workflow run.
+
+## Assets and release
+
+Trivia references are recorded per hint in `data/sources/`. Keep these URLs in the same order as each country's `trivia_ja` entries.
+
+The bundled Noto Sans JP font contains only the characters used by the app. After changing UI, country data, or the privacy text, regenerate it and check coverage:
+
+```sh
+uv run --with-requirements scripts/requirements-assets.txt python scripts/subset_font.py --fetch-source
+uv run --with-requirements scripts/requirements-assets.txt python scripts/subset_font.py --check
+```
+
+The upstream font URL and checksum are pinned in the script. `assets/fonts/OFL.txt` retains its license. App icons and launch artwork are generated from `assets/icons/master.svg` by `scripts/gen_icons.py`.
+
+See [release and store submission](docs/release.md) for signed AAB/iOS archives, store artwork, metadata, and the account-owner requirements. See the [privacy policy](docs/privacy.md) for local progress storage and backups.
+
 ## Build for iOS
 
 Install Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen), then add the Rust targets:

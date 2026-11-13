@@ -348,7 +348,10 @@ fn review_questions_are_selected_from_the_missed_countries() -> Result<(), Box<d
     assert!(!missed.is_empty(), "round should include a missed answer");
     assert_eq!(app.get_screen().as_str(), "result");
     invoke(&app, "ホームへ戻る")?;
-    invoke(&app, "まちがえた国を復習")?;
+    invoke(
+        &app,
+        &format!("まちがえた国を復習、{}問", app.get_review_count()),
+    )?;
     assert_eq!(app.get_screen().as_str(), "quiz");
     let review_question_count = usize::try_from(app.get_total_questions())?;
     assert_eq!(review_question_count, missed.len());
@@ -410,5 +413,38 @@ fn progress_is_loaded_by_a_second_app_instance() -> Result<(), Box<dyn Error>> {
 
     let second_app = test_app(&progress)?;
     assert_eq!(second_app.get_review_count(), expected_review_count);
+    Ok(())
+}
+
+#[test]
+fn about_pages_show_privacy_and_license_notices() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+
+    invoke(&app, "このアプリについて")?;
+    assert_eq!(app.get_screen().as_str(), "about");
+    invoke(&app, "プライバシーポリシー")?;
+    assert_eq!(app.get_screen().as_str(), "privacy");
+    assert!(
+        app.get_privacy_text()
+            .contains("本アプリは個人情報を収集しません")
+    );
+
+    invoke(&app, "戻る")?;
+    assert_eq!(app.get_screen().as_str(), "about");
+    invoke(&app, "ライセンス")?;
+    assert_eq!(app.get_screen().as_str(), "licenses");
+    assert!(
+        app.get_flag_license_text()
+            .contains("The MIT License (MIT)")
+    );
+    assert!(
+        app.get_font_license_text()
+            .contains("SIL OPEN FONT LICENSE Version 1.1")
+    );
+
+    invoke(&app, "戻る")?;
+    assert_eq!(app.get_screen().as_str(), "about");
     Ok(())
 }

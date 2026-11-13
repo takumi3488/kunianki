@@ -1,0 +1,8 @@
+{
+  "language": "ja-JP",
+  "appName": "国あんき",
+  "shortDescription": "国連加盟193か国を、国旗・地図・3ヒントの4択クイズで覚える",
+  "fullDescription": "国連加盟193か国を、4択クイズで覚えよう。\n\n国旗・地図・雑学（3ヒント）の問題に挑戦できます。「おまかせ」では3種類の問題が出題されます。\n\n雑学問題ではヒントを3段階で見られます。間違えた問題はあとから復習できます。\n\n学習の進み具合は端末内に保存されます。アカウント登録は不要です。国データと画像をアプリに収録しているため、オフラインで遊べます。",
+  "privacyPolicyUrl": "https://github.com/takumi3488/kunianki/blob/main/docs/privacy.md",
+  "supportUrl": "https://github.com/takumi3488/kunianki/issues"
+}
