@@ -1,0 +1,232 @@
+[
+  {
+    "iso2": "AG",
+    "name_ja": "アンティグア・バーブーダ",
+    "name_en": "Antigua and Barbuda",
+    "region": "north_america",
+    "capital_ja": "セントジョンズ",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "ネルソンズ・ドックヤードは世界遺産に登録された歴史港である"
+  },
+  {
+    "iso2": "BB",
+    "name_ja": "バルバドス",
+    "name_en": "Barbados",
+    "region": "north_america",
+    "capital_ja": "ブリッジタウン",
+    "languages_ja": ["英語"],
+    "currency_ja": "バルバドス・ドル",
+    "trivia_ja": "ラム酒ブランドの一つ「マウントゲイ」は1703年創業とされる"
+  },
+  {
+    "iso2": "BS",
+    "name_ja": "バハマ",
+    "name_en": "Bahamas",
+    "region": "north_america",
+    "capital_ja": "ナッソー",
+    "languages_ja": ["英語"],
+    "currency_ja": "バハマ・ドル",
+    "trivia_ja": "大西洋に面する広大な海底洞窟群が知られている"
+  },
+  {
+    "iso2": "BZ",
+    "name_ja": "ベリーズ",
+    "name_en": "Belize",
+    "region": "north_america",
+    "capital_ja": "ベルモパン",
+    "languages_ja": ["英語"],
+    "currency_ja": "ベリーズ・ドル",
+    "trivia_ja": "世界遺産に登録された大規模なサンゴ礁保護区がある"
+  },
+  {
+    "iso2": "CA",
+    "name_ja": "カナダ",
+    "name_en": "Canada",
+    "region": "north_america",
+    "capital_ja": "オタワ",
+    "languages_ja": ["英語", "フランス語"],
+    "currency_ja": "カナダ・ドル",
+    "trivia_ja": "世界最長の海岸線を持つ国として知られる"
+  },
+  {
+    "iso2": "CR",
+    "name_ja": "コスタリカ",
+    "name_en": "Costa Rica",
+    "region": "north_america",
+    "capital_ja": "サンホセ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "コスタリカ・コロン",
+    "trivia_ja": "国土の約4分の1が保護地域に指定されている"
+  },
+  {
+    "iso2": "CU",
+    "name_ja": "キューバ",
+    "name_en": "Cuba",
+    "region": "north_america",
+    "capital_ja": "ハバナ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "キューバ・ペソ",
+    "trivia_ja": "1961年に大規模な識字運動が行われた"
+  },
+  {
+    "iso2": "DM",
+    "name_ja": "ドミニカ国",
+    "name_en": "Dominica",
+    "region": "north_america",
+    "capital_ja": "ロゾー",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "世界で2番目に大きい温泉湖が国立公園内にある"
+  },
+  {
+    "iso2": "DO",
+    "name_ja": "ドミニカ共和国",
+    "name_en": "Dominican Republic",
+    "region": "north_america",
+    "capital_ja": "サントドミンゴ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ドミニカ・ペソ",
+    "trivia_ja": "米州最古の欧州式大聖堂が旧市街に建つ"
+  },
+  {
+    "iso2": "GD",
+    "name_ja": "グレナダ",
+    "name_en": "Grenada",
+    "region": "north_america",
+    "capital_ja": "セントジョージズ",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "ナツメグの実が国旗に描かれ、香辛料栽培が盛ん"
+  },
+  {
+    "iso2": "GT",
+    "name_ja": "グアテマラ",
+    "name_en": "Guatemala",
+    "region": "north_america",
+    "capital_ja": "グアテマラシティ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ケツァル",
+    "trivia_ja": "古代マヤ文明の都市遺跡ティカルは世界遺産に登録されている"
+  },
+  {
+    "iso2": "HN",
+    "name_ja": "ホンジュラス",
+    "name_en": "Honduras",
+    "region": "north_america",
+    "capital_ja": "テグシガルパ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "レンピラ",
+    "trivia_ja": "コパン遺跡には古代マヤ文明の精巧な石碑群が残る"
+  },
+  {
+    "iso2": "HT",
+    "name_ja": "ハイチ",
+    "name_en": "Haiti",
+    "region": "north_america",
+    "capital_ja": "ポルトープランス",
+    "languages_ja": ["フランス語", "ハイチ・クレオール語"],
+    "currency_ja": "グールド",
+    "trivia_ja": "1804年に独立し、世界初の黒人共和国となった"
+  },
+  {
+    "iso2": "JM",
+    "name_ja": "ジャマイカ",
+    "name_en": "Jamaica",
+    "region": "north_america",
+    "capital_ja": "キングストン",
+    "languages_ja": ["英語"],
+    "currency_ja": "ジャマイカ・ドル",
+    "trivia_ja": "ブルーマウンテン産のコーヒーは高級品として知られる"
+  },
+  {
+    "iso2": "KN",
+    "name_ja": "セントクリストファー・ネービス",
+    "name_en": "Saint Kitts and Nevis",
+    "region": "north_america",
+    "capital_ja": "バセテール",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "島内最高峰のリアムイガ山は火口湖を持つ休火山である"
+  },
+  {
+    "iso2": "LC",
+    "name_ja": "セントルシア",
+    "name_en": "Saint Lucia",
+    "region": "north_america",
+    "capital_ja": "カストリーズ",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "ピトン山地の火山景観は世界遺産に登録されている"
+  },
+  {
+    "iso2": "MX",
+    "name_ja": "メキシコ",
+    "name_en": "Mexico",
+    "region": "north_america",
+    "capital_ja": "メキシコシティ",
+    "languages_ja": ["スペイン語", "先住民諸語"],
+    "currency_ja": "メキシコ・ペソ",
+    "trivia_ja": "古代都市テオティワカンには太陽のピラミッドが残る"
+  },
+  {
+    "iso2": "NI",
+    "name_ja": "ニカラグア",
+    "name_en": "Nicaragua",
+    "region": "north_america",
+    "capital_ja": "マナグア",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ニカラグア・コルドバ",
+    "trivia_ja": "中米最大の淡水湖コシボルカ湖が国土に広がる"
+  },
+  {
+    "iso2": "PA",
+    "name_ja": "パナマ",
+    "name_en": "Panama",
+    "region": "north_america",
+    "capital_ja": "パナマ市",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "バルボア、米ドル",
+    "trivia_ja": "カスコ・ビエホ旧市街が世界遺産に登録されている"
+  },
+  {
+    "iso2": "SV",
+    "name_ja": "エルサルバドル",
+    "name_en": "El Salvador",
+    "region": "north_america",
+    "capital_ja": "サンサルバドル",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "ホヤ・デ・セレン遺跡は火山灰に埋もれた古代集落である"
+  },
+  {
+    "iso2": "TT",
+    "name_ja": "トリニダード・トバゴ",
+    "name_en": "Trinidad and Tobago",
+    "region": "north_america",
+    "capital_ja": "ポートオブスペイン",
+    "languages_ja": ["英語"],
+    "currency_ja": "トリニダード・トバゴ・ドル",
+    "trivia_ja": "世界最大級の天然アスファルト湖、ピッチ湖がある"
+  },
+  {
+    "iso2": "US",
+    "name_ja": "アメリカ合衆国",
+    "name_en": "United States",
+    "region": "north_america",
+    "capital_ja": "ワシントンD.C.",
+    "languages_ja": ["英語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "1872年、世界初の国立公園としてイエローストーンが設立された"
+  },
+  {
+    "iso2": "VC",
+    "name_ja": "セントビンセント及びグレナディーン諸島",
+    "name_en": "Saint Vincent and the Grenadines",
+    "region": "north_america",
+    "capital_ja": "キングスタウン",
+    "languages_ja": ["英語"],
+    "currency_ja": "東カリブ・ドル",
+    "trivia_ja": "火山島が連なり、ラ・スフリエール山は現在も活動する"
+  }
+]

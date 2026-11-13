@@ -30,6 +30,16 @@
       ],
     },
     {
+      // i-slint-backend-testing is pinned with "=" and must match slint exactly
+      matchPackageNames: [
+        "slint",
+        "slint-build",
+        "i-slint-backend-testing"
+      ],
+      groupName: "Slint updates",
+      groupSlug: "slint-updates",
+    },
+    {
       matchManagers: [
         "github-actions"
       ],

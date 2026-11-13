@@ -1,0 +1,472 @@
+[
+  {
+    "iso2": "AE",
+    "name_ja": "アラブ首長国連邦",
+    "name_en": "United Arab Emirates",
+    "region": "asia",
+    "capital_ja": "アブダビ",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "UAEディルハム",
+    "trivia_ja": "世界一高い超高層ビル「ブルジュ・ハリファ」がある"
+  },
+  {
+    "iso2": "AF",
+    "name_ja": "アフガニスタン",
+    "name_en": "Afghanistan",
+    "region": "asia",
+    "capital_ja": "カブール",
+    "languages_ja": ["ダリー語", "パシュトー語"],
+    "currency_ja": "アフガニ",
+    "trivia_ja": "北東部にはヒンドゥークシュ山脈が広がる"
+  },
+  {
+    "iso2": "AM",
+    "name_ja": "アルメニア",
+    "name_en": "Armenia",
+    "region": "asia",
+    "capital_ja": "エレバン",
+    "languages_ja": ["アルメニア語"],
+    "currency_ja": "アルメニア・ドラム",
+    "trivia_ja": "301年にキリスト教を国教とした最初の国とされる"
+  },
+  {
+    "iso2": "AZ",
+    "name_ja": "アゼルバイジャン",
+    "name_en": "Azerbaijan",
+    "region": "asia",
+    "capital_ja": "バクー",
+    "languages_ja": ["アゼルバイジャン語"],
+    "currency_ja": "アゼルバイジャン・マナト",
+    "trivia_ja": "泥火山が世界で最も多く分布する地域の一つ"
+  },
+  {
+    "iso2": "BD",
+    "name_ja": "バングラデシュ",
+    "name_en": "Bangladesh",
+    "region": "asia",
+    "capital_ja": "ダッカ",
+    "languages_ja": ["ベンガル語"],
+    "currency_ja": "タカ",
+    "trivia_ja": "世界最大級のマングローブ林が国境をまたいで広がる"
+  },
+  {
+    "iso2": "BH",
+    "name_ja": "バーレーン",
+    "name_en": "Bahrain",
+    "region": "asia",
+    "capital_ja": "マナーマ",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "バーレーン・ディナール",
+    "trivia_ja": "古代文明ディルムンの中心地とされる遺跡がある"
+  },
+  {
+    "iso2": "BN",
+    "name_ja": "ブルネイ",
+    "name_en": "Brunei",
+    "region": "asia",
+    "capital_ja": "バンダルスリブガワン",
+    "languages_ja": ["マレー語"],
+    "currency_ja": "ブルネイ・ドル",
+    "trivia_ja": "水上に広がる大規模な集落カンポン・アイールがある"
+  },
+  {
+    "iso2": "BT",
+    "name_ja": "ブータン",
+    "name_en": "Bhutan",
+    "region": "asia",
+    "capital_ja": "ティンプー",
+    "languages_ja": ["ゾンカ語"],
+    "currency_ja": "ニュルタム",
+    "trivia_ja": "国民総幸福量を政策指標として掲げたことで知られる"
+  },
+  {
+    "iso2": "CN",
+    "name_ja": "中国",
+    "name_en": "China",
+    "region": "asia",
+    "capital_ja": "北京",
+    "languages_ja": ["中国語"],
+    "currency_ja": "人民元",
+    "trivia_ja": "万里の長城は世界遺産に登録されている"
+  },
+  {
+    "iso2": "CY",
+    "name_ja": "キプロス",
+    "name_en": "Cyprus",
+    "region": "asia",
+    "capital_ja": "ニコシア",
+    "languages_ja": ["ギリシャ語", "トルコ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "女神アフロディーテ誕生の地と古代から伝えられる"
+  },
+  {
+    "iso2": "GE",
+    "name_ja": "ジョージア",
+    "name_en": "Georgia",
+    "region": "asia",
+    "capital_ja": "トビリシ",
+    "languages_ja": ["ジョージア語"],
+    "currency_ja": "ラリ",
+    "trivia_ja": "ワイン醸造の歴史は約8000年前にさかのぼる"
+  },
+  {
+    "iso2": "ID",
+    "name_ja": "インドネシア",
+    "name_en": "Indonesia",
+    "region": "asia",
+    "capital_ja": "ジャカルタ",
+    "languages_ja": ["インドネシア語"],
+    "currency_ja": "ルピア",
+    "trivia_ja": "世界最大の群島国家で、赤道が領土を横切る"
+  },
+  {
+    "iso2": "IL",
+    "name_ja": "イスラエル",
+    "name_en": "Israel",
+    "region": "asia",
+    "capital_ja": "エルサレム",
+    "languages_ja": ["ヘブライ語"],
+    "currency_ja": "新シェケル",
+    "trivia_ja": "死海沿岸には地表で最も低い陸地の一つがある"
+  },
+  {
+    "iso2": "IN",
+    "name_ja": "インド",
+    "name_en": "India",
+    "region": "asia",
+    "capital_ja": "ニューデリー",
+    "languages_ja": ["ヒンディー語", "英語"],
+    "currency_ja": "インド・ルピー",
+    "trivia_ja": "ゼロを含む十進位取り記数法の発展に寄与した"
+  },
+  {
+    "iso2": "IQ",
+    "name_ja": "イラク",
+    "name_en": "Iraq",
+    "region": "asia",
+    "capital_ja": "バグダッド",
+    "languages_ja": ["アラビア語", "クルド語"],
+    "currency_ja": "イラク・ディナール",
+    "trivia_ja": "古代メソポタミア文明の遺跡ウルが残る"
+  },
+  {
+    "iso2": "IR",
+    "name_ja": "イラン",
+    "name_en": "Iran",
+    "region": "asia",
+    "capital_ja": "テヘラン",
+    "languages_ja": ["ペルシア語"],
+    "currency_ja": "イラン・リヤル",
+    "trivia_ja": "古代のペルセポリス遺跡は世界遺産に登録されている"
+  },
+  {
+    "iso2": "JO",
+    "name_ja": "ヨルダン",
+    "name_en": "Jordan",
+    "region": "asia",
+    "capital_ja": "アンマン",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "ヨルダン・ディナール",
+    "trivia_ja": "岩を削って造られたペトラ遺跡がある"
+  },
+  {
+    "iso2": "JP",
+    "name_ja": "日本",
+    "name_en": "Japan",
+    "region": "asia",
+    "capital_ja": "東京",
+    "languages_ja": ["日本語"],
+    "currency_ja": "円",
+    "trivia_ja": "世界最古級の現存企業の一つ金剛組がある島国"
+  },
+  {
+    "iso2": "KG",
+    "name_ja": "キルギス",
+    "name_en": "Kyrgyzstan",
+    "region": "asia",
+    "capital_ja": "ビシュケク",
+    "languages_ja": ["キルギス語", "ロシア語"],
+    "currency_ja": "キルギス・ソム",
+    "trivia_ja": "天山山脈が国土の大部分を占める"
+  },
+  {
+    "iso2": "KH",
+    "name_ja": "カンボジア",
+    "name_en": "Cambodia",
+    "region": "asia",
+    "capital_ja": "プノンペン",
+    "languages_ja": ["クメール語"],
+    "currency_ja": "リエル",
+    "trivia_ja": "世界最大級の宗教建築群アンコール遺跡がある"
+  },
+  {
+    "iso2": "KP",
+    "name_ja": "北朝鮮",
+    "name_en": "North Korea",
+    "region": "asia",
+    "capital_ja": "平壌",
+    "languages_ja": ["朝鮮語"],
+    "currency_ja": "北朝鮮ウォン",
+    "trivia_ja": "半世紀以上立ち入りが制限された緩衝地帯に自然が残る"
+  },
+  {
+    "iso2": "KR",
+    "name_ja": "韓国",
+    "name_en": "South Korea",
+    "region": "asia",
+    "capital_ja": "ソウル",
+    "languages_ja": ["韓国語"],
+    "currency_ja": "韓国ウォン",
+    "trivia_ja": "金属活字で印刷された現存最古級の本が伝わる"
+  },
+  {
+    "iso2": "KW",
+    "name_ja": "クウェート",
+    "name_en": "Kuwait",
+    "region": "asia",
+    "capital_ja": "クウェート",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "クウェート・ディナール",
+    "trivia_ja": "世界有数の原油埋蔵量を持つ国の一つ"
+  },
+  {
+    "iso2": "KZ",
+    "name_ja": "カザフスタン",
+    "name_en": "Kazakhstan",
+    "region": "asia",
+    "capital_ja": "アスタナ",
+    "languages_ja": ["カザフ語", "ロシア語"],
+    "currency_ja": "カザフスタン・テンゲ",
+    "trivia_ja": "内陸国として世界最大の面積を持つ"
+  },
+  {
+    "iso2": "LA",
+    "name_ja": "ラオス",
+    "name_en": "Laos",
+    "region": "asia",
+    "capital_ja": "ビエンチャン",
+    "languages_ja": ["ラオ語"],
+    "currency_ja": "キープ",
+    "trivia_ja": "世界遺産の古都ルアンパバーンがある"
+  },
+  {
+    "iso2": "LB",
+    "name_ja": "レバノン",
+    "name_en": "Lebanon",
+    "region": "asia",
+    "capital_ja": "ベイルート",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "レバノン・ポンド",
+    "trivia_ja": "古代フェニキアの港町ビブロスは世界遺産に登録されている"
+  },
+  {
+    "iso2": "LK",
+    "name_ja": "スリランカ",
+    "name_en": "Sri Lanka",
+    "region": "asia",
+    "capital_ja": "スリジャヤワルダナプラコッテ",
+    "languages_ja": ["シンハラ語", "タミル語"],
+    "currency_ja": "スリランカ・ルピー",
+    "trivia_ja": "高地で栽培される紅茶が主要な輸出品"
+  },
+  {
+    "iso2": "MM",
+    "name_ja": "ミャンマー",
+    "name_en": "Myanmar",
+    "region": "asia",
+    "capital_ja": "ネーピードー",
+    "languages_ja": ["ビルマ語"],
+    "currency_ja": "チャット",
+    "trivia_ja": "ルビーや翡翠など宝石の産地として知られる"
+  },
+  {
+    "iso2": "MN",
+    "name_ja": "モンゴル",
+    "name_en": "Mongolia",
+    "region": "asia",
+    "capital_ja": "ウランバートル",
+    "languages_ja": ["モンゴル語"],
+    "currency_ja": "トゥグルグ",
+    "trivia_ja": "広大な草原とゴビ砂漠が国土に広がる"
+  },
+  {
+    "iso2": "MV",
+    "name_ja": "モルディブ",
+    "name_en": "Maldives",
+    "region": "asia",
+    "capital_ja": "マレ",
+    "languages_ja": ["ディベヒ語"],
+    "currency_ja": "ルフィヤ",
+    "trivia_ja": "国土の平均標高は約1.5メートルと非常に低い"
+  },
+  {
+    "iso2": "MY",
+    "name_ja": "マレーシア",
+    "name_en": "Malaysia",
+    "region": "asia",
+    "capital_ja": "クアラルンプール",
+    "languages_ja": ["マレー語"],
+    "currency_ja": "リンギット",
+    "trivia_ja": "国土はボルネオ島とマレー半島にまたがる"
+  },
+  {
+    "iso2": "NP",
+    "name_ja": "ネパール",
+    "name_en": "Nepal",
+    "region": "asia",
+    "capital_ja": "カトマンズ",
+    "languages_ja": ["ネパール語"],
+    "currency_ja": "ネパール・ルピー",
+    "trivia_ja": "生きた女神クマリを選ぶ伝統がある"
+  },
+  {
+    "iso2": "OM",
+    "name_ja": "オマーン",
+    "name_en": "Oman",
+    "region": "asia",
+    "capital_ja": "マスカット",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "オマーン・リアル",
+    "trivia_ja": "乳香の交易で栄えた古代の港遺跡が残る"
+  },
+  {
+    "iso2": "PH",
+    "name_ja": "フィリピン",
+    "name_en": "Philippines",
+    "region": "asia",
+    "capital_ja": "マニラ",
+    "languages_ja": ["フィリピノ語", "英語"],
+    "currency_ja": "フィリピン・ペソ",
+    "trivia_ja": "7000以上の島々から成り、火山活動が盛ん"
+  },
+  {
+    "iso2": "PK",
+    "name_ja": "パキスタン",
+    "name_en": "Pakistan",
+    "region": "asia",
+    "capital_ja": "イスラマバード",
+    "languages_ja": ["ウルドゥー語", "英語"],
+    "currency_ja": "パキスタン・ルピー",
+    "trivia_ja": "カラコルム山脈には標高8000メートル超の峰が複数ある"
+  },
+  {
+    "iso2": "QA",
+    "name_ja": "カタール",
+    "name_en": "Qatar",
+    "region": "asia",
+    "capital_ja": "ドーハ",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "カタール・リヤル",
+    "trivia_ja": "世界有数の液化天然ガス輸出国の一つ"
+  },
+  {
+    "iso2": "SA",
+    "name_ja": "サウジアラビア",
+    "name_en": "Saudi Arabia",
+    "region": "asia",
+    "capital_ja": "リヤド",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "サウジアラビア・リヤル",
+    "trivia_ja": "イスラム教の聖地メッカとメディナがある"
+  },
+  {
+    "iso2": "SG",
+    "name_ja": "シンガポール",
+    "name_en": "Singapore",
+    "region": "asia",
+    "capital_ja": "シンガポール",
+    "languages_ja": ["英語", "マレー語", "中国語", "タミル語"],
+    "currency_ja": "シンガポール・ドル",
+    "trivia_ja": "緑化政策で「ガーデンシティ」を目指してきた"
+  },
+  {
+    "iso2": "SY",
+    "name_ja": "シリア",
+    "name_en": "Syria",
+    "region": "asia",
+    "capital_ja": "ダマスカス",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "シリア・ポンド",
+    "trivia_ja": "古代都市パルミラの遺跡は世界遺産に登録されている"
+  },
+  {
+    "iso2": "TH",
+    "name_ja": "タイ",
+    "name_en": "Thailand",
+    "region": "asia",
+    "capital_ja": "バンコク",
+    "languages_ja": ["タイ語"],
+    "currency_ja": "バーツ",
+    "trivia_ja": "水かけ祭りソンクラーンは旧正月を祝う行事"
+  },
+  {
+    "iso2": "TJ",
+    "name_ja": "タジキスタン",
+    "name_en": "Tajikistan",
+    "region": "asia",
+    "capital_ja": "ドゥシャンベ",
+    "languages_ja": ["タジク語"],
+    "currency_ja": "ソモニ",
+    "trivia_ja": "パミール高原は「世界の屋根」とも呼ばれる"
+  },
+  {
+    "iso2": "TL",
+    "name_ja": "東ティモール",
+    "name_en": "Timor-Leste",
+    "region": "asia",
+    "capital_ja": "ディリ",
+    "languages_ja": ["テトゥン語", "ポルトガル語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "サンダルウッドの産地として長く知られる"
+  },
+  {
+    "iso2": "TM",
+    "name_ja": "トルクメニスタン",
+    "name_en": "Turkmenistan",
+    "region": "asia",
+    "capital_ja": "アシガバット",
+    "languages_ja": ["トルクメン語"],
+    "currency_ja": "トルクメニスタン・マナト",
+    "trivia_ja": "世界有数の天然ガス埋蔵量を持つ"
+  },
+  {
+    "iso2": "TR",
+    "name_ja": "トルコ",
+    "name_en": "Turkey",
+    "region": "asia",
+    "capital_ja": "アンカラ",
+    "languages_ja": ["トルコ語"],
+    "currency_ja": "トルコ・リラ",
+    "trivia_ja": "ボスポラス海峡は黒海とマルマラ海を結ぶ"
+  },
+  {
+    "iso2": "UZ",
+    "name_ja": "ウズベキスタン",
+    "name_en": "Uzbekistan",
+    "region": "asia",
+    "capital_ja": "タシケント",
+    "languages_ja": ["ウズベク語"],
+    "currency_ja": "スム",
+    "trivia_ja": "古代都市サマルカンドはシルクロードの要衝として栄えた"
+  },
+  {
+    "iso2": "VN",
+    "name_ja": "ベトナム",
+    "name_en": "Vietnam",
+    "region": "asia",
+    "capital_ja": "ハノイ",
+    "languages_ja": ["ベトナム語"],
+    "currency_ja": "ドン",
+    "trivia_ja": "水上人形劇は約千年の歴史を持つ伝統芸能"
+  },
+  {
+    "iso2": "YE",
+    "name_ja": "イエメン",
+    "name_en": "Yemen",
+    "region": "asia",
+    "capital_ja": "サヌア",
+    "languages_ja": ["アラビア語"],
+    "currency_ja": "イエメン・リアル",
+    "trivia_ja": "シバーム旧市街には泥れんが造りの高層住宅が並ぶ"
+  }
+]

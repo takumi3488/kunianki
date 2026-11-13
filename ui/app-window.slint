@@ -1,0 +1,1143 @@
+import { AboutSlint, ScrollView } from "std-widgets.slint";
+import "../assets/fonts/NotoSansJP.ttf";
+
+export struct MissedItem {
+    name: string,
+    capital: string,
+    flag: image,
+}
+
+export global AtlasColors {
+    out property <color> canvas: #edf3f1;
+    out property <color> paper: #ffffff;
+    out property <color> ink: #173a45;
+    out property <color> muted: #61777b;
+    out property <color> line: #d6e2df;
+    out property <color> accent: #e65c43;
+    out property <color> sea: #c8e3df;
+    out property <color> correct: #d9eee3;
+    out property <color> incorrect: #f8ded8;
+}
+
+component ActionButton inherits Rectangle {
+    in property <string> label;
+    in property <string> accessible-name: root.label;
+    in property <bool> enabled: true;
+    callback tapped();
+
+    accessible-role: button;
+    accessible-label: root.accessible-name;
+    accessible-enabled: root.enabled;
+    accessible-action-default => {
+        if (root.enabled) {
+            root.tapped();
+        }
+    }
+    height: 58px;
+    border-radius: 17px;
+    background: root.enabled ? AtlasColors.accent : #cbd7d4;
+
+    Text {
+        text: root.label;
+        color: root.enabled ? #ffffff : #718285;
+        font-size: 17px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    TouchArea {
+        clicked => {
+            if (root.enabled) {
+                root.tapped();
+            }
+        }
+    }
+}
+
+component BackButton inherits Rectangle {
+    callback tapped();
+
+    accessible-role: button;
+    accessible-label: "ホーム";
+    accessible-action-default => { root.tapped(); }
+    width: 88px;
+    height: 36px;
+    background: transparent;
+
+    HorizontalLayout {
+        spacing: 8px;
+        Text {
+            text: "‹";
+            color: AtlasColors.accent;
+            font-size: 27px;
+            vertical-alignment: center;
+        }
+
+        Text {
+            text: "ホーム";
+            color: AtlasColors.muted;
+            font-size: 14px;
+            vertical-alignment: center;
+        }
+    }
+
+    TouchArea {
+        clicked => { root.tapped(); }
+    }
+}
+
+
+component OptionTile inherits Rectangle {
+    in property <string> label;
+    in property <bool> selected: false;
+    in property <length> tile-height: 52px;
+    callback tapped();
+
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-action-default => { root.tapped(); }
+    height: root.tile-height;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: root.selected ? AtlasColors.ink : AtlasColors.line;
+    background: root.selected ? AtlasColors.ink : AtlasColors.paper;
+
+    Text {
+        text: root.label;
+        color: root.selected ? #ffffff : AtlasColors.ink;
+        font-size: 15px;
+        font-weight: 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    TouchArea {
+        clicked => {
+            root.tapped();
+        }
+    }
+}
+
+component AnswerTile inherits Rectangle {
+    in property <string> label;
+    in property <int> choice-index;
+    in property <int> selected-index: -1;
+    in property <int> correct-index: -1;
+    in property <bool> answered: false;
+    callback tapped(int);
+
+    accessible-role: button;
+    accessible-label: "選択肢 \{root.choice-index + 1}: \{root.label}";
+    accessible-description: root.answered
+        ? (root.choice-index == root.correct-index ? "正解" : "不正解")
+        : "";
+    accessible-enabled: !root.answered;
+    accessible-action-default => {
+        if (!root.answered) {
+            root.tapped(root.choice-index);
+        }
+    }
+    height: 52px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: root.answered && root.choice-index == root.correct-index ? #72ae8b
+        : root.answered && root.choice-index == root.selected-index ? #da8a79
+        : AtlasColors.line;
+    background: root.answered && root.choice-index == root.correct-index ? AtlasColors.correct
+        : root.answered && root.choice-index == root.selected-index ? AtlasColors.incorrect
+        : AtlasColors.paper;
+
+    Text {
+        text: root.label;
+        color: AtlasColors.ink;
+        font-size: 15px;
+        font-weight: 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    TouchArea {
+        clicked => {
+            if (!root.answered) {
+                root.tapped(root.choice-index);
+            }
+        }
+    }
+}
+
+component MissedRow inherits Rectangle {
+    in property <MissedItem> item;
+
+    height: 64px;
+    border-radius: 14px;
+    background: AtlasColors.paper;
+
+    HorizontalLayout {
+        padding: 10px;
+        spacing: 12px;
+
+        Image {
+            source: root.item.flag;
+            width: 48px;
+            height: 34px;
+            image-fit: contain;
+        }
+
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+
+            Text {
+                text: root.item.name;
+                overflow: elide;
+                color: AtlasColors.ink;
+                font-size: 15px;
+                font-weight: 700;
+            }
+
+            Text {
+                text: "首都：\{root.item.capital}";
+                overflow: elide;
+                color: AtlasColors.muted;
+                font-size: 12px;
+            }
+        }
+    }
+}
+
+export component AppWindow inherits Window {
+    in-out property <string> screen: "home";
+    in property <int> review-count;
+    callback start-round(int, int);
+    callback start-review();
+    in property <int> question-number;
+    in property <int> total-questions;
+    in property <int> score;
+    in property <string> kind;
+    in property <image> question-image;
+    in property <[string]> hints;
+    in property <bool> can-reveal-hint;
+    in property <[string]> choices;
+    in property <bool> answered;
+    in property <int> selected-index: -1;
+    in property <int> correct-index: -1;
+    callback answer(int);
+    callback reveal-hint();
+    callback next-question();
+    in property <int> result-correct;
+    in property <int> result-score;
+    in property <[MissedItem]> missed;
+    callback go-home();
+
+    private property <int> chosen-mode: 0;
+    private property <int> chosen-region: 0;
+
+    preferred-width: 390px;
+    preferred-height: 844px;
+    min-width: 320px;
+    background: AtlasColors.canvas;
+    default-font-family: "Noto Sans JP";
+
+    Rectangle {
+        x: root.safe-area-insets.left;
+        y: root.safe-area-insets.top;
+        width: root.width - root.safe-area-insets.left - root.safe-area-insets.right;
+        height: root.height - root.safe-area-insets.top - root.safe-area-insets.bottom;
+        clip: true;
+
+        if root.screen == "home": VerticalLayout {
+            padding: 22px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 38px;
+                spacing: 8px;
+
+                Text {
+                    text: "くに暗記";
+                    color: AtlasColors.ink;
+                    font-size: 18px;
+                    font-weight: 800;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    background: transparent;
+                }
+
+                Text {
+                    text: "193か国";
+                    color: AtlasColors.muted;
+                    font-size: 12px;
+                    vertical-alignment: center;
+                }
+            }
+
+            Rectangle {
+                height: 24px;
+                background: transparent;
+            }
+
+            Text {
+                text: "世界のかたちを、\n国から知る。";
+                color: AtlasColors.ink;
+                font-size: 27px;
+                font-weight: 700;
+                line-height-factor: 1.25;
+            }
+
+            Rectangle {
+                height: 16px;
+                background: transparent;
+            }
+
+            Rectangle {
+                height: 254px;
+                border-radius: 25px;
+                background: AtlasColors.ink;
+                clip: true;
+
+                Rectangle {
+                    x: 232px;
+                    y: -32px;
+                    width: 190px;
+                    height: 190px;
+                    border-radius: 95px;
+                    border-width: 1px;
+                    border-color: #66838a;
+                    background: transparent;
+                }
+
+                Rectangle {
+                    x: 273px;
+                    y: 10px;
+                    width: 108px;
+                    height: 108px;
+                    border-radius: 54px;
+                    border-width: 1px;
+                    border-color: #66838a;
+                    background: transparent;
+                }
+
+                Rectangle {
+                    x: 315px;
+                    y: 51px;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 12px;
+                    background: AtlasColors.accent;
+                }
+
+                VerticalLayout {
+                    padding: 22px;
+                    spacing: 0px;
+
+                    Text {
+                        text: "旗・地図・3つのヒント";
+                        color: AtlasColors.sea;
+                        font-size: 13px;
+                        font-weight: 600;
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                        background: transparent;
+                    }
+
+                    Text {
+                        text: "見つけて、\n覚えていく。";
+                        color: #ffffff;
+                        font-size: 25px;
+                        font-weight: 700;
+                        line-height-factor: 1.2;
+                    }
+
+                    Rectangle {
+                        height: 12px;
+                        background: transparent;
+                    }
+
+                    Rectangle {
+                        width: 34px;
+                        height: 4px;
+                        border-radius: 2px;
+                        background: AtlasColors.accent;
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+                        background: transparent;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+                        Text {
+                            text: "193";
+                            color: #ffffff;
+                            font-size: 30px;
+                            font-weight: 800;
+                        }
+
+                        Text {
+                            text: "か国をめぐる、10問の旅";
+                            color: AtlasColors.sea;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 22px;
+                background: transparent;
+            }
+
+            ActionButton {
+                label: "クイズを始める";
+                tapped => {
+                    root.screen = "select";
+                }
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            Rectangle {
+                accessible-role: button;
+                accessible-label: "まちがえた国を復習";
+                accessible-enabled: root.review-count > 0;
+                accessible-action-default => {
+                    if (root.review-count > 0) {
+                        root.start-review();
+                    }
+                }
+                height: 62px;
+                border-radius: 16px;
+                border-width: 1px;
+                border-color: AtlasColors.line;
+                background: root.review-count > 0 ? AtlasColors.paper : #e4ece9;
+
+                HorizontalLayout {
+                    padding-left: 18px;
+                    padding-right: 18px;
+                    spacing: 8px;
+
+                    Text {
+                        text: "まちがえた国を復習";
+                        color: root.review-count > 0 ? AtlasColors.ink : AtlasColors.muted;
+                        font-size: 14px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                        background: transparent;
+                    }
+
+                    Text {
+                        text: "\{root.review-count}";
+                        color: root.review-count > 0 ? AtlasColors.accent : AtlasColors.muted;
+                        font-size: 17px;
+                        font-weight: 800;
+                        vertical-alignment: center;
+                    }
+
+                    Text {
+                        text: "問";
+                        color: AtlasColors.muted;
+                        font-size: 12px;
+                        vertical-alignment: center;
+                    }
+                }
+
+                TouchArea {
+                    clicked => {
+                        if (root.review-count > 0) {
+                            root.start-review();
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+                background: transparent;
+            }
+
+            Rectangle {
+                accessible-role: button;
+                accessible-label: "このアプリについて";
+                accessible-action-default => { root.screen = "about"; }
+                height: 42px;
+                background: transparent;
+
+                Text {
+                    text: "このアプリについて";
+                    color: AtlasColors.muted;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    height: 100%;
+                    width: 100%;
+                }
+
+                TouchArea {
+                    clicked => {
+                        root.screen = "about";
+                    }
+                }
+            }
+        }
+
+        if root.screen == "select": VerticalLayout {
+            padding: 20px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 36px;
+                BackButton {
+                    tapped => { root.screen = "home"; }
+                }
+            }
+
+            Rectangle {
+                height: 22px;
+                background: transparent;
+            }
+
+            Text {
+                text: "どんな方法で覚える？";
+                color: AtlasColors.ink;
+                font-size: 23px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 6px;
+                background: transparent;
+            }
+
+            Text {
+                text: "出題方法と地域を選んでください";
+                color: AtlasColors.muted;
+                font-size: 13px;
+            }
+
+            Rectangle {
+                height: 22px;
+                background: transparent;
+            }
+
+            Text {
+                text: "出題方法";
+                color: AtlasColors.ink;
+                font-size: 15px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            GridLayout {
+                spacing: 8px;
+                Row {
+                    OptionTile {
+                        label: "国旗";
+                        selected: root.chosen-mode == 0;
+                        tile-height: 54px;
+                        tapped => { root.chosen-mode = 0; }
+                    }
+
+                    OptionTile {
+                        label: "地図";
+                        selected: root.chosen-mode == 1;
+                        tile-height: 54px;
+                        tapped => { root.chosen-mode = 1; }
+                    }
+                }
+
+                Row {
+                    OptionTile {
+                        label: "3ヒント";
+                        selected: root.chosen-mode == 2;
+                        tile-height: 54px;
+                        tapped => { root.chosen-mode = 2; }
+                    }
+
+                    OptionTile {
+                        label: "おまかせ";
+                        selected: root.chosen-mode == 3;
+                        tile-height: 54px;
+                        tapped => { root.chosen-mode = 3; }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 20px;
+                background: transparent;
+            }
+
+            Text {
+                text: "地域";
+                color: AtlasColors.ink;
+                font-size: 15px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            GridLayout {
+                spacing: 8px;
+                Row {
+                    OptionTile {
+                        label: "全地域";
+                        selected: root.chosen-region == 0;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 0; }
+                    }
+
+                    OptionTile {
+                        label: "アジア";
+                        selected: root.chosen-region == 1;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 1; }
+                    }
+                }
+
+                Row {
+                    OptionTile {
+                        label: "ヨーロッパ";
+                        selected: root.chosen-region == 2;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 2; }
+                    }
+
+                    OptionTile {
+                        label: "アフリカ";
+                        selected: root.chosen-region == 3;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 3; }
+                    }
+                }
+
+                Row {
+                    OptionTile {
+                        label: "北米・中米";
+                        selected: root.chosen-region == 4;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 4; }
+                    }
+
+                    OptionTile {
+                        label: "南米";
+                        selected: root.chosen-region == 5;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 5; }
+                    }
+                }
+
+                Row {
+                    OptionTile {
+                        label: "オセアニア";
+                        selected: root.chosen-region == 6;
+                        tile-height: 42px;
+                        tapped => { root.chosen-region = 6; }
+                    }
+                }
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+                background: transparent;
+            }
+
+            ActionButton {
+                label: "10問を始める";
+                tapped => {
+                    root.start-round(root.chosen-mode, root.chosen-region);
+                }
+            }
+        }
+
+        if root.screen == "quiz": VerticalLayout {
+            padding: 20px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 36px;
+                spacing: 8px;
+                Text {
+                    text: "第 \{root.question-number} 問";
+                    color: AtlasColors.ink;
+                    font-size: 16px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    background: transparent;
+                }
+
+                Text {
+                    text: "得点  \{root.score}";
+                    color: AtlasColors.muted;
+                    font-size: 13px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+            }
+
+            Rectangle {
+                height: 8px;
+                background: transparent;
+            }
+
+            Rectangle {
+                height: 5px;
+                border-radius: 3px;
+                background: AtlasColors.line;
+                Rectangle {
+                    width: root.total-questions > 0
+                        ? parent.width * root.question-number / root.total-questions
+                        : 0px;
+                    height: 100%;
+                    border-radius: 3px;
+                    background: AtlasColors.accent;
+                }
+            }
+
+            Rectangle {
+                height: 20px;
+                background: transparent;
+            }
+
+            Text {
+                text: root.kind == "trivia" ? "ヒントから国を当てよう" : (root.kind == "map" ? "地図を見て答えよう" : "国旗を見て答えよう");
+                color: AtlasColors.ink;
+                font-size: 19px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 12px;
+                background: transparent;
+            }
+
+            if root.kind == "trivia": ScrollView {
+                height: root.hints.length > 2 ? 178px : (root.hints.length == 2 ? 114px : 54px);
+                vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+                mouse-drag-pan-enabled: true;
+
+                VerticalLayout {
+                    spacing: 8px;
+
+                    for hint[index] in root.hints: Rectangle {
+                        min-height: hint-text.preferred-height + 24px;
+                        border-radius: 14px;
+                        background: AtlasColors.paper;
+
+                        HorizontalLayout {
+                            padding-left: 14px;
+                            padding-right: 14px;
+                            spacing: 12px;
+
+                            Text {
+                                text: "ヒント \{index + 1}";
+                                color: AtlasColors.accent;
+                                font-size: 12px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+
+                            hint-text := Text {
+                                text: hint;
+                                color: AtlasColors.ink;
+                                font-size: 13px;
+                                vertical-alignment: center;
+                                wrap: word-wrap;
+                                horizontal-stretch: 1;
+                            }
+                        }
+                    }
+
+                    if root.hints.length == 0: Text {
+                        text: "ヒントがここに表示されます";
+                        color: AtlasColors.muted;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+
+            if root.kind != "trivia": Rectangle {
+                height: 178px;
+                border-radius: 20px;
+                background: AtlasColors.paper;
+                if root.question-image.width == 0: Text {
+                    text: root.kind == "map" ? "地図を読み込みます" : "国旗を読み込みます";
+                    color: AtlasColors.muted;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    width: 100%;
+                    height: 100%;
+                }
+                Image {
+                    source: root.question-image;
+                    width: 100%;
+                    height: 100%;
+                    image-fit: contain;
+                }
+            }
+
+            Rectangle {
+                height: 14px;
+                background: transparent;
+            }
+
+            if root.kind == "trivia" && !root.answered: ActionButton {
+                accessible-name: "次のヒントを見る";
+                label: root.can-reveal-hint ? "次のヒントを見る" : "ヒントをすべて表示済み";
+                enabled: root.can-reveal-hint && !root.answered;
+                height: 48px;
+                tapped => { root.reveal-hint(); }
+            }
+
+            if root.kind == "trivia" && !root.answered: Rectangle {
+                height: 12px;
+                background: transparent;
+            }
+
+            VerticalLayout {
+                spacing: 8px;
+                for choice[index] in root.choices: AnswerTile {
+                    label: choice;
+                    choice-index: index;
+                    selected-index: root.selected-index;
+                    correct-index: root.correct-index;
+                    answered: root.answered;
+                    tapped(index) => { root.answer(index); }
+                }
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+                background: transparent;
+            }
+
+            if root.answered: ActionButton {
+                label: "次の問題へ";
+                tapped => { root.next-question(); }
+            }
+        }
+
+        if root.screen == "result": VerticalLayout {
+            padding: 22px;
+            spacing: 0px;
+
+            Text {
+                text: "今回の結果";
+                color: AtlasColors.ink;
+                font-size: 23px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 18px;
+                background: transparent;
+            }
+
+            Rectangle {
+                height: 164px;
+                border-radius: 24px;
+                background: AtlasColors.ink;
+                HorizontalLayout {
+                    padding: 22px;
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 4px;
+                        Text {
+                            text: "正解";
+                            color: AtlasColors.sea;
+                            font-size: 13px;
+                        }
+
+                        Text {
+                            text: "\{root.result-correct} / \{root.total-questions}";
+                            color: #ffffff;
+                            font-size: 37px;
+                            font-weight: 800;
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                        background: transparent;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        Text {
+                            text: "\{root.result-score}";
+                            color: AtlasColors.accent;
+                            font-size: 38px;
+                            font-weight: 800;
+                            horizontal-alignment: right;
+                        }
+
+                        Text {
+                            text: "ポイント";
+                            color: AtlasColors.sea;
+                            font-size: 12px;
+                            horizontal-alignment: right;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 20px;
+                background: transparent;
+            }
+
+            Text {
+                text: root.missed.length > 0 ? "もう一度覚えたい国" : "全問正解です。すばらしい！";
+                color: AtlasColors.ink;
+                font-size: 16px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            if root.missed.length > 0: ScrollView {
+                vertical-stretch: 1;
+                mouse-drag-pan-enabled: true;
+                vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+                VerticalLayout {
+                    spacing: 8px;
+                    for item in root.missed: MissedRow {
+                        item: item;
+                    }
+                }
+            }
+
+            Rectangle {
+                min-height: 16px;
+                vertical-stretch: root.missed.length > 0 ? 0 : 1;
+                background: transparent;
+            }
+
+            ActionButton {
+                label: "ホームへ戻る";
+                tapped => { root.go-home(); }
+            }
+        }
+
+        if root.screen == "about": VerticalLayout {
+            padding: 22px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 36px;
+                BackButton {
+                    tapped => { root.screen = "home"; }
+                }
+            }
+
+            Rectangle {
+                height: 24px;
+                background: transparent;
+            }
+
+            Text {
+                text: "このアプリについて";
+                color: AtlasColors.ink;
+                font-size: 23px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            Text {
+                text: "世界の国を、旗と地図と豆知識で。";
+                color: AtlasColors.muted;
+                font-size: 14px;
+            }
+
+            Rectangle {
+                height: 28px;
+                background: transparent;
+            }
+
+            Text {
+                text: "データと素材";
+                color: AtlasColors.ink;
+                font-size: 16px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            Rectangle {
+                height: 224px;
+                border-radius: 18px;
+                background: AtlasColors.paper;
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 0px;
+
+                    HorizontalLayout {
+                        height: 42px;
+                        Text {
+                            text: "国のデータ";
+                            color: AtlasColors.ink;
+                            font-size: 14px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            background: transparent;
+                        }
+
+                        Text {
+                            text: "Wikidata · CC0";
+                            color: AtlasColors.muted;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: AtlasColors.line;
+                    }
+
+                    HorizontalLayout {
+                        height: 42px;
+                        Text {
+                            text: "国旗";
+                            color: AtlasColors.ink;
+                            font-size: 14px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            background: transparent;
+                        }
+
+                        Text {
+                            text: "flag-icons · MIT";
+                            color: AtlasColors.muted;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: AtlasColors.line;
+                    }
+
+                    HorizontalLayout {
+                        height: 42px;
+                        Text {
+                            text: "地図";
+                            color: AtlasColors.ink;
+                            font-size: 14px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            background: transparent;
+                        }
+
+                        Text {
+                            text: "Natural Earth · PD";
+                            color: AtlasColors.muted;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Rectangle {
+                        height: 1px;
+                        background: AtlasColors.line;
+                    }
+
+                    HorizontalLayout {
+                        height: 42px;
+                        Text {
+                            text: "日本語書体";
+                            color: AtlasColors.ink;
+                            font-size: 14px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            background: transparent;
+                        }
+
+                        Text {
+                            text: "Noto Sans JP · OFL";
+                            color: AtlasColors.muted;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+                background: transparent;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                AboutSlint {
+                    width: 154px;
+                    height: 40px;
+                }
+            }
+        }
+    }
+}

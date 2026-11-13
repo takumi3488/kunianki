@@ -1,0 +1,8 @@
+/target
+__pycache__/
+/ios/*.xcodeproj
+/ios/Info.plist
+/android/.gradle
+/android/build
+/android/app/build
+/android/local.properties
