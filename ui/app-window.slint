@@ -743,11 +743,13 @@ export component AppWindow inherits Window {
             }
 
             if root.kind == "trivia": ScrollView {
-                height: root.hints.length > 2 ? 178px : (root.hints.length == 2 ? 114px : 54px);
+                min-height: root.hints.length > 2 ? 178px : (root.hints.length == 2 ? 114px : 54px);
+                vertical-stretch: 1;
                 vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
                 mouse-drag-pan-enabled: true;
 
                 VerticalLayout {
+                    alignment: start;
                     spacing: 8px;
 
                     for hint[index] in root.hints: Rectangle {
@@ -841,7 +843,8 @@ export component AppWindow inherits Window {
             }
 
             Rectangle {
-                vertical-stretch: 1;
+                min-height: root.kind == "trivia" ? 16px : 0px;
+                vertical-stretch: root.kind == "trivia" ? 0 : 1;
                 background: transparent;
             }
 
