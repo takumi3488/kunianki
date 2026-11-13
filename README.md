@@ -2,11 +2,13 @@
 
 A Japanese country quiz built with Rust and Slint.
 
-| Home | Mode select | Flag quiz |
+| Home (iOS) | Mode select (Android) | Flag quiz (Android) |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/home.png" width="240" alt="Home screen"> | <img src="docs/screenshots/select.png" width="240" alt="Mode and region selection"> | <img src="docs/screenshots/quiz-flag-answered.png" width="240" alt="Answered flag question"> |
-| **Map quiz** | **Trivia quiz** | **Result** |
-| <img src="docs/screenshots/quiz-map.png" width="240" alt="Map question"> | <img src="docs/screenshots/quiz-trivia.png" width="240" alt="Trivia question with two hints"> | <img src="docs/screenshots/result.png" width="240" alt="Round result with missed countries"> |
+| <img src="docs/screenshots/home.png" width="240" alt="Native iPhone home screen"> | <img src="docs/screenshots/select.png" width="240" alt="Native Android mode and region selection"> | <img src="docs/screenshots/quiz-flag-answered.png" width="240" alt="Native Android answered flag question"> |
+| **Map quiz (Android)** | **Trivia quiz (Android)** | **Result (Android)** |
+| <img src="docs/screenshots/quiz-map.png" width="240" alt="Native Android map question"> | <img src="docs/screenshots/quiz-trivia.png" width="240" alt="Native Android trivia question with three hints"> | <img src="docs/screenshots/result.png" width="240" alt="Native Android result with missed countries"> |
+
+Captured from an iPhone 17 Simulator (iOS 26.5) and an API 36 Android Emulator. Additional native captures: [iPhone flag](docs/screenshots/ios-flag.png), [iPhone result](docs/screenshots/ios-result.png), [iPad home](docs/screenshots/ipad-home.png), [iPad quiz](docs/screenshots/ipad-quiz.png).
 
 ## Run on desktop
 
@@ -81,8 +83,10 @@ Set `ANDROID_HOME` and `ANDROID_NDK_HOME` to the SDK/NDK locations on your machi
 
 ## Mobile smoke checklist
 
+Re-run these checks after app changes. Native interaction has been exercised on iPhone 17 and iPad Pro 13-inch Simulators (iOS 26.5), and an API 36 x86_64 Android Emulator in CI. Physical devices have not been tested.
+
 - [ ] iOS simulator: run `xcodegen generate` in `ios/`, then build and launch from Xcode.
-- [ ] Android emulator: run `./android/gradlew -p android :app:installDebug` from the repo root, then launch the app.
+- [ ] Android emulator: run `./android/gradlew -p android :app:installDebug -Pkunianki.androidAbi=x86_64` for an x86_64 Emulator, then launch the app. Omit the ABI property for an arm64-v8a device.
 - [ ] Confirm the app launches and Japanese text renders correctly.
 - [ ] Confirm flag and map questions display their images.
 - [ ] Answer questions, restart the app, and confirm progress persists.

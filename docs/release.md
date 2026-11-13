@@ -52,6 +52,8 @@ xcodebuild -exportArchive \
 
 成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/` 内の `.ipa` です。`ios/ExportOptions.plist` は `app-store-connect` 配布、`automatic` 署名を指定します。公開版・ビルド番号は `ios/project.yml` で更新し、XcodeGenで再生成してください。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
 
+ローカルで生成した未署名の検証用アーカイブは `target/release/ios/kunianki-unsigned.xcarchive` です。arm64、iPhone/iPad、最低iOS 16.0、AppIcon・起動画像・プライバシーマニフェストを確認済みで、本番用の署名やIPA書き出しは行っていません。
+
 ## ストア掲載情報・提出物
 
 日本語の入力原稿は [`google-play.json`](../store/ja-JP/google-play.json) と [`app-store.json`](../store/ja-JP/app-store.json) にあります。アプリ名はストア名・ネイティブ表示名の「国あんき」、画面内表示は既存どおり「くに暗記」です。日本語の説明は国連加盟193か国、国旗・地図・雑学の4択、3段階のヒント、誤答の復習、オフライン、ログイン不要という現行機能に限定しています。
@@ -62,6 +64,8 @@ xcodebuild -exportArchive \
 | App Store | アプリ名30、サブタイトル30、説明4,000文字 | iPhone向けスクリーンショット最低1枚（Dynamic Island搭載の中型ディスプレイに対応する解像度）。iPadにも対応する現在のターゲット設定を維持するなら、iPad 13インチ向けスクリーンショットも用意。各デバイスサイズは最大10枚、JPEGまたはPNG。アプリ本体にApp Store用アイコンを含める。 |
 
 スクリーンショットは現行リリースの実機能を示すものを使います。ホーム、国旗・地図・雑学、ヒント、結果・復習が分かる画面を選び、別アプリの通知や未提供機能を写し込みません。Play用アイコンは `assets/icons/android/play-icon-512.png`、feature graphicは `assets/icons/android/play-feature-graphic.png` です。元絵は `assets/icons/master.svg` で、iOS・Android用の画像とリソースは `scripts/gen_icons.py` で生成します。
+
+撮影済みのiPhone画面は `docs/screenshots/home.png`、`ios-flag.png`、`ios-result.png`、iPad画面は `ipad-home.png` と `ipad-quiz.png` です。同じフォルダーの `select.png`、`quiz-flag-answered.png`、`quiz-map.png`、`quiz-trivia.png`、`result.png` はAndroid Emulatorの実画面です。OSごとに対応する画像だけを使い、最終提出時のストア仕様と照合してください。
 
 **App Store Connect** では日本語ローカリゼーション、掲載名・サブタイトル・説明、サポートURL、プライバシーポリシーURL、価格・配信地域、App Privacyの回答、年齢制限質問票、輸出コンプライアンスの質問、審査連絡先・審査メモを入力します。ログインは不要でオフライン利用できます。年齢レーティングは質問票への実際の回答から決まるため、最終回答とレーティングはアカウント所有者が内容を確認して設定してください。
 

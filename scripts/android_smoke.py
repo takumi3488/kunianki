@@ -842,10 +842,48 @@ class AndroidSmoke:
             lambda current: self.find_node(current, "クイズを始める") is not None,
             "home after trivia review",
         )
+        trivia_progress, _ = self.read_progress()
+        self.assert_home_count(home, trivia_progress)
+        if trivia_progress["entries"]["JP"]["trivia"]["box_number"] != 2:
+            raise SmokeFailure("Correct three-hint review did not advance JP trivia to box two")
+
+        self.review_fixture("flag")
+        tree = self.start_review()
+        options = self.choices(tree)
+        japan = [index for index, (name, _) in options.items() if name == "日本"]
+        if len(japan) != 1:
+            raise SmokeFailure(f"Seeded JP flag review did not show one 日本 choice: {options!r}")
+        wrong = next(index for index in options if index != japan[0])
+        self.tap_node(options[wrong][1], "deliberately wrong answer before final relaunch")
+        answered = self.wait_for(
+            lambda current: self.answer_statuses(current) is not None,
+            "wrong-answer feedback before final relaunch",
+        )
+        if self.answer_statuses(answered)[wrong]:
+            raise SmokeFailure("The deliberately non-日本 answer was unexpectedly marked correct")
+        self.assert_score(answered, 0)
+        result = self.wait_for(
+            lambda current: self.find_node(current, "次の問題へ") is not None,
+            "wrong-review answer continuation before final relaunch",
+        )
+        self.tap_label(result, "次の問題へ")
+        result = self.wait_for(
+            lambda current: "今回の結果" in "\n".join(self.values(current)),
+            "wrong-review result before final relaunch",
+        )
+        self.result_values(result, 1, 0, 0)
+        self.tap_label(result, "ホームへ戻る")
+        home = self.wait_for(
+            lambda current: self.find_node(current, "クイズを始める") is not None,
+            "home with a nonzero wrong-review count",
+        )
         progress, before = self.read_progress("progress-before-relaunch.json")
         self.assert_home_count(home, progress)
-        if progress["entries"]["JP"]["trivia"]["box_number"] != 2:
-            raise SmokeFailure("Correct three-hint review did not advance JP trivia to box two")
+        review_count = self.review_count(home)
+        if review_count <= 0:
+            raise SmokeFailure("Wrong JP flag answer did not leave a nonzero review count")
+        if progress["entries"]["JP"]["flag"]["box_number"] != 1:
+            raise SmokeFailure("Wrong JP flag answer did not preserve the review item in box one")
 
         self.adb_run("shell", "am", "force-stop", PACKAGE)
         after_stop, after_stop_raw = self.read_progress("progress-while-force-stopped.json")
@@ -856,9 +894,12 @@ class AndroidSmoke:
         if after_launch != progress or after_launch_raw != before:
             raise SmokeFailure("App-private progress.json did not survive force-stop and relaunch")
         self.assert_home_count(home, after_launch)
+        if self.review_count(home) != review_count:
+            raise SmokeFailure("Nonzero home review count changed after force-stop/relaunch")
         self.snapshot("home-after-relaunch")
         self.report["assertions"].append(
-            "actual app-private progress.json and home review count survived force-stop/relaunch"
+            "nonzero review count from a real wrong answer and byte-identical progress.json "
+            "survived force-stop/relaunch"
         )
 
     def execute(self):
