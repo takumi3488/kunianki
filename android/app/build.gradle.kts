@@ -10,6 +10,9 @@ abstract class BuildRustLibrary @Inject constructor(
 ) : DefaultTask() {
     @get:Input
     abstract val androidAbi: Property<String>
+    @get:Input
+    abstract val androidSmoke: Property<Boolean>
+
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -27,19 +30,32 @@ abstract class BuildRustLibrary @Inject constructor(
 
     @TaskAction
     fun build() {
+        val isAndroidSmoke = androidSmoke.get()
+        val buildEnvironment = System.getenv().toMutableMap().apply {
+            remove("SLINT_EMIT_DEBUG_INFO")
+            put("ANDROID_JAR", androidJar.get().asFile.absolutePath)
+            if (isAndroidSmoke) put("SLINT_EMIT_DEBUG_INFO", "1")
+        }
+        val arguments = mutableListOf(
+            "cargo", "ndk", "-t", androidAbi.get(), "--platform", "26",
+            "-o", outputDir.get().asFile.absolutePath,
+            "build", "--release", "--lib",
+        )
+        if (isAndroidSmoke) arguments += listOf("--features", "android-smoke")
         execOperations.exec {
-            environment("ANDROID_JAR", androidJar.get().asFile.absolutePath)
+            setEnvironment(buildEnvironment)
             workingDir(repositoryRoot.get().asFile)
-            commandLine(
-                "cargo", "ndk", "-t", androidAbi.get(), "--platform", "26",
-                "-o", outputDir.get().asFile.absolutePath,
-                "build", "--release", "--lib",
-            )
+            commandLine(arguments)
         }
     }
+
 }
 
 val selectedAndroidAbi = providers.gradleProperty("kunianki.androidAbi").orElse("arm64-v8a")
+val androidSmokeEnabled = providers.gradleProperty("kunianki.androidSmoke")
+    .map { it.toBoolean() }
+    .orElse(false)
+
 
 val releaseSigningKeys = listOf(
     "KUNIANKI_KEYSTORE_PATH",
@@ -68,6 +84,8 @@ val releaseSigning = if (signingIsConfigured) {
 val repoRoot = rootProject.layout.projectDirectory.dir("..")
 val buildRustLibrary = tasks.register<BuildRustLibrary>("buildRustLibrary") {
     androidAbi.set(selectedAndroidAbi)
+    androidSmoke.set(androidSmokeEnabled)
+
     repositoryRoot.set(repoRoot)
     sources.from(
         repoRoot.dir("src"),
@@ -109,6 +127,12 @@ android {
             } else {
                 null
             }
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = androidSmokeEnabled.get()
         }
     }
 

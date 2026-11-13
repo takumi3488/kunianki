@@ -1,23 +1,107 @@
 #!/usr/bin/env python3
-"""Exercise the installed Android app through UIAutomator XML and native input."""
+"""Exercise the Android app using Slint scene inspection and native input."""
 
 import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import time
-import xml.etree.ElementTree as ET
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 PACKAGE = "dev.kunianki.app"
 ACTIVITY = f"{PACKAGE}/android.app.NativeActivity"
 POLL_SECONDS = 0.4
+MCP_DEVICE_PORT = 9315
+MCP_MAX_ELEMENTS = 1000
 
 
 class SmokeFailure(RuntimeError):
     pass
+
+
+class SlintSceneNode:
+    def __init__(self, element, window_properties):
+        self.element = element
+        self.role = element.get("accessibleRole", "Unknown")
+        self.bounds = None
+        self.window_bounds = None
+        try:
+            scale = float(window_properties.get("scaleFactor", 0))
+            position = window_properties.get("position", {})
+            window_size = window_properties.get("size", {})
+            origin_x = int(position.get("x", 0))
+            origin_y = int(position.get("y", 0))
+            width = int(window_size.get("width", 0))
+            height = int(window_size.get("height", 0))
+            if scale > 0 and width > 0 and height > 0:
+                self.window_bounds = (
+                    origin_x,
+                    origin_y,
+                    origin_x + width,
+                    origin_y + height,
+                )
+                absolute = element.get("absolutePosition", {})
+                size = element.get("size", {})
+                left = round(origin_x + float(absolute.get("x", 0)) * scale)
+                top = round(origin_y + float(absolute.get("y", 0)) * scale)
+                right = round(
+                    origin_x
+                    + (float(absolute.get("x", 0)) + float(size.get("width", 0)))
+                    * scale
+                )
+                bottom = round(
+                    origin_y
+                    + (float(absolute.get("y", 0)) + float(size.get("height", 0)))
+                    * scale
+                )
+                self.bounds = (left, top, right, bottom)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            pass
+
+        label = element.get("accessibleLabel", "")
+        self.attrib = {
+            "text": label,
+            "content-desc": label,
+            "value": element.get("accessibleValue", ""),
+            "hint": element.get("accessiblePlaceholderText", ""),
+            "description": element.get("accessibleDescription", ""),
+            "role": self.role,
+            "bounds": self._bounds_text(),
+        }
+
+    def _bounds_text(self):
+        if self.bounds is None:
+            return ""
+        left, top, right, bottom = self.bounds
+        return f"[{left},{top}][{right},{bottom}]"
+
+    def iter(self):
+        return iter((self,))
+
+
+class SlintScene:
+    def __init__(self, window_properties, response):
+        self.window_properties = window_properties
+        self.response = response
+        self.elements = []
+        seen_handles = set()
+        for element in response.get("elements", []):
+            handle = element.get("handle", {})
+            key = (str(handle.get("index", "0")), str(handle.get("generation", "0")))
+            if key in seen_handles:
+                continue
+            seen_handles.add(key)
+            self.elements.append(SlintSceneNode(element, window_properties))
+
+    def iter(self, tag=None):
+        if tag not in (None, "node"):
+            return iter(())
+        return iter(self.elements)
 
 
 class AndroidSmoke:
@@ -41,13 +125,22 @@ class AndroidSmoke:
             "package": PACKAGE,
             "activity": ACTIVITY,
             "device_serial": self.serial,
-            "input_method": "adb shell input tap using UIAutomator accessibility bounds",
+            "input_method": (
+                "adb shell input tap using Slint MCP scene labels and geometry; "
+                "no MCP click/callback"
+            ),
+            "native_android_accessibility": (
+                "Not exposed by Slint 1.18.1 android-activity; smoke selectors use "
+                "the embedded live-scene inspector"
+            ),
             "rounds": [],
             "screenshots": [],
             "assertions": [],
         }
-        self.latest_xml = b""
-        self.latest_dump_error = ""
+        self.mcp_host_port = None
+        self.rpc_id = 0
+        self.latest_scene = None
+        self.latest_scene_json = ""
 
     def log(self, message):
         line = str(message)
@@ -97,59 +190,146 @@ class AndroidSmoke:
             raise SmokeFailure(f"adb {args!r} failed ({result.returncode}): {detail}")
         return result
 
+    def open_mcp_forward(self):
+        if self.mcp_host_port is not None:
+            return
+        with socket.socket() as host_socket:
+            host_socket.bind(("127.0.0.1", 0))
+            self.mcp_host_port = host_socket.getsockname()[1]
+        self.adb_run(
+            "forward",
+            f"tcp:{self.mcp_host_port}",
+            f"tcp:{MCP_DEVICE_PORT}",
+        )
+        self.log(
+            f"Forwarded host TCP {self.mcp_host_port} to app-local MCP TCP {MCP_DEVICE_PORT}"
+        )
+
+    def mcp_request(self, method, params):
+        if self.mcp_host_port is None:
+            raise SmokeFailure("Slint MCP adb port-forward has not been created")
+        self.rpc_id += 1
+        request_body = json.dumps(
+            {"jsonrpc": "2.0", "id": self.rpc_id, "method": method, "params": params}
+        ).encode()
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.mcp_host_port}/mcp",
+            data=request_body,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=3) as response:
+                payload = json.loads(response.read())
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+            raise SmokeFailure(f"Slint MCP request {method!r} failed: {error}") from error
+        if "error" in payload:
+            raise SmokeFailure(f"Slint MCP request {method!r}: {payload['error']}")
+        result = payload.get("result")
+        if not isinstance(result, dict):
+            raise SmokeFailure(f"Slint MCP request {method!r} returned no result")
+        return result
+
+    def mcp_tool(self, name, arguments):
+        result = self.mcp_request(
+            "tools/call", {"name": name, "arguments": arguments}
+        )
+        content = result.get("content", [])
+        text = next(
+            (block.get("text") for block in content if block.get("type") == "text"),
+            None,
+        )
+        if result.get("isError"):
+            raise SmokeFailure(f"Slint MCP tool {name!r} failed: {text or result!r}")
+        if text is None:
+            raise SmokeFailure(f"Slint MCP tool {name!r} returned no JSON content")
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as error:
+            raise SmokeFailure(
+                f"Slint MCP tool {name!r} returned invalid JSON: {text[:500]!r}"
+            ) from error
+
+    def tree(self):
+        windows = self.mcp_tool("list_windows", {}).get("windowHandles", [])
+        if len(windows) != 1:
+            raise SmokeFailure(
+                f"Expected one live Slint window; MCP reported {len(windows)}"
+            )
+        window_handle = windows[0]
+        window = self.mcp_tool(
+            "get_window_properties", {"windowHandle": window_handle}
+        )
+        root_handle = window.get("rootElementHandle")
+        if not isinstance(root_handle, dict):
+            raise SmokeFailure("Slint MCP window properties omitted rootElementHandle")
+        response = self.mcp_tool(
+            "get_element_tree",
+            {"elementHandle": root_handle, "maxElements": MCP_MAX_ELEMENTS},
+        )
+        if response.get("debugInfoMissing"):
+            raise SmokeFailure(
+                "Slint element debug metadata is missing; build the smoke feature with "
+                "SLINT_EMIT_DEBUG_INFO=1"
+            )
+        if response.get("truncated"):
+            raise SmokeFailure(
+                f"Slint scene exceeds the {MCP_MAX_ELEMENTS}-element inspection limit"
+            )
+        self.latest_scene = SlintScene(window, response)
+        self.latest_scene_json = json.dumps(
+            {
+                "windowHandle": window_handle,
+                "windowProperties": window,
+                "scene": response,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        return self.latest_scene
+
     @staticmethod
     def values(tree):
         return [
             value.strip()
             for node in tree.iter("node")
-            for key in ("text", "content-desc", "value", "hint")
+            for key in ("text", "content-desc", "value", "hint", "description")
             if (value := node.attrib.get(key, "").strip())
         ]
 
-    def tree(self):
-        path = "/sdcard/kunianki-uiautomator.xml"
-        dump = self.adb_run("shell", "uiautomator", "dump", path, check=False)
-        error = dump.stderr.decode("utf-8", errors="replace").strip()
-        if dump.returncode:
-            self.latest_dump_error = f"uiautomator dump exit {dump.returncode}: {error}"
-            raise SmokeFailure(self.latest_dump_error)
-        raw = self.adb_run("shell", "cat", path).stdout
-        self.latest_xml = raw
-        try:
-            return ET.fromstring(raw)
-        except ET.ParseError as error:
-            self.latest_dump_error = f"uiautomator output was not XML: {error}"
-            raise SmokeFailure(self.latest_dump_error) from error
 
     def wait_for(self, predicate, description, timeout=30):
         deadline = time.monotonic() + timeout
-        last_tree = None
+        last_scene = None
         last_error = ""
         while time.monotonic() < deadline:
             try:
-                last_tree = self.tree()
+                last_scene = self.tree()
                 last_error = ""
-                if predicate(last_tree):
-                    return last_tree
+                if predicate(last_scene):
+                    return last_scene
             except SmokeFailure as error:
                 last_error = str(error)
             time.sleep(POLL_SECONDS)
-        visible = self.describe_tree(last_tree) if last_tree is not None else "no XML tree"
-        self.save_diagnostics(last_tree)
-        details = f"; last accessibility error: {last_error}" if last_error else ""
+        visible = self.describe_tree(last_scene) if last_scene is not None else "no Slint scene"
+        self.save_diagnostics(last_scene)
+        details = f"; last Slint MCP error: {last_error}" if last_error else ""
         raise SmokeFailure(
-            f"Timed out waiting for {description}{details}. Visible accessibility nodes: {visible}. "
-            "The captured hierarchy is the actual native UI; missing semantics mean the "
-            "NativeActivity accessibility bridge is not exposing required controls; no blind "
-            "coordinate fallback was used."
+            f"Timed out waiting for {description}{details}. Slint scene elements: {visible}"
         )
 
     @staticmethod
     def describe_tree(tree):
         if tree is None:
             return "unavailable"
-        values = AndroidSmoke.values(tree)
-        return repr(values[:60]) if values else "no labeled Android accessibility nodes"
+        elements = [
+            f"{node.role}: {node.attrib.get('content-desc', '')}"
+            for node in tree.iter("node")
+            if node.attrib.get("content-desc", "").strip()
+        ]
+        return repr(elements[:60]) if elements else "no labeled Slint scene elements"
 
     @staticmethod
     def matches(node, label, prefix=False):
@@ -160,53 +340,81 @@ class AndroidSmoke:
         return False
 
     def find_node(self, tree, label, prefix=False):
+        matches = [
+            node
+            for node in tree.iter("node")
+            if self.matches(node, label, prefix)
+        ]
         return next(
-            (node for node in tree.iter("node") if self.matches(node, label, prefix)),
-            None,
+            (node for node in matches if node.role == "Button"),
+            matches[0] if matches else None,
         )
 
     def tap_node(self, node, description):
-        bounds = node.attrib.get("bounds", "")
-        match = re.fullmatch(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]", bounds)
-        if not match:
+        if node.role != "Button":
             raise SmokeFailure(
-                f"Accessible control {description!r} has no usable UIAutomator bounds: {bounds!r}"
+                f"Slint element {description!r} has role {node.role!r}, not Button"
             )
-        left, top, right, bottom = map(int, match.groups())
-        if right <= left or bottom <= top or left < 0 or top < 0:
-            raise SmokeFailure(f"Invalid accessibility bounds for {description!r}: {bounds}")
+        if node.bounds is None or node.window_bounds is None:
+            raise SmokeFailure(
+                f"Slint element {description!r} has no usable absolute geometry"
+            )
+        left, top, right, bottom = node.bounds
+        if right <= left or bottom <= top:
+            raise SmokeFailure(f"Invalid Slint geometry for {description!r}: {node.bounds}")
         x, y = (left + right) // 2, (top + bottom) // 2
+        if x < 0 or y < 0:
+            raise SmokeFailure(
+                f"Slint element {description!r} maps to invalid screen coordinates {(x, y)}"
+            )
+        window_left, window_top, window_right, window_bottom = node.window_bounds
+        if not (window_left <= x < window_right and window_top <= y < window_bottom):
+            raise SmokeFailure(
+                f"Slint element {description!r} center {(x, y)} is outside native "
+                f"window bounds {node.window_bounds}"
+            )
         self.adb_run("shell", "input", "tap", x, y)
-        self.log(f"Native tap: {description} at accessibility bounds {bounds}")
+        self.log(
+            f"Native tap: {description} at Slint scene bounds "
+            f"[{left},{top}][{right},{bottom}]"
+        )
 
     def tap_label(self, tree, label, prefix=False):
-        node = self.find_node(tree, label, prefix)
-        if node is None:
+        buttons = [
+            node
+            for node in tree.iter("node")
+            if node.role == "Button" and self.matches(node, label, prefix)
+        ]
+        if len(buttons) != 1:
             raise SmokeFailure(
-                f"Accessible control {label!r} is absent; Android UIAutomator cannot drive this screen safely. "
-                f"Visible nodes: {self.describe_tree(tree)}"
+                f"Expected one Slint Button matching {label!r}, found {len(buttons)}; "
+                f"scene: {self.describe_tree(tree)}"
             )
-        self.tap_node(node, label)
+        self.tap_node(buttons[0], label)
 
     def snapshot(self, name):
         tree = self.tree()
         screenshot = self.adb_run("exec-out", "screencap", "-p").stdout
         if not screenshot.startswith(b"\x89PNG\r\n\x1a\n") or len(screenshot) < 2048:
             raise SmokeFailure(f"{name}: emulator did not return a usable raw PNG screenshot")
-        (self.ui_dir / f"{name}.xml").write_bytes(self.latest_xml)
+        (self.ui_dir / f"{name}.json").write_text(
+            self.latest_scene_json, encoding="utf-8"
+        )
         (self.screen_dir / f"{name}.png").write_bytes(screenshot)
         self.report["screenshots"].append(f"screenshots/{name}.png")
-        self.log(f"Captured raw screenshot and UIAutomator XML: {name}")
+        self.log(f"Captured raw screenshot and live Slint scene: {name}")
         return tree
 
     def save_diagnostics(self, tree=None):
         try:
             if tree is None:
                 tree = self.tree()
-            (self.diagnostic_dir / "current-window.xml").write_bytes(self.latest_xml)
+            (self.diagnostic_dir / "current-scene.json").write_text(
+                self.latest_scene_json, encoding="utf-8"
+            )
         except Exception as error:
-            (self.diagnostic_dir / "accessibility-error.txt").write_text(
-                f"{error}\n{self.latest_dump_error}\n", encoding="utf-8"
+            (self.diagnostic_dir / "mcp-error.txt").write_text(
+                f"{error}\n", encoding="utf-8"
             )
         try:
             image = self.adb_run("exec-out", "screencap", "-p").stdout
@@ -248,6 +456,8 @@ class AndroidSmoke:
         result = {}
         pattern = re.compile(r"選択肢\s*(\d+)\s*:\s*(.*)", re.DOTALL)
         for node in tree.iter("node"):
+            if node.role != "Button":
+                continue
             label = node.attrib.get("content-desc", "").strip()
             if not label.startswith("選択肢"):
                 label = node.attrib.get("text", "").strip()
@@ -257,8 +467,8 @@ class AndroidSmoke:
                 result[index] = (match.group(2).strip(), node)
         if set(result) != {1, 2, 3, 4}:
             raise SmokeFailure(
-                f"Expected four accessible answer labels with bounds; found {sorted(result)}. "
-                "No blind-coordinate or image-based answer fallback is permitted."
+                f"Expected four Slint Button answer labels with geometry; found {sorted(result)}. "
+                "No guessed coordinates or screenshot-based selectors are permitted."
             )
         return result
 
@@ -268,7 +478,7 @@ class AndroidSmoke:
             details = " ".join(
                 value
                 for child in node.iter()
-                for key in ("text", "content-desc", "value", "hint")
+                for key in ("text", "content-desc", "value", "hint", "description")
                 if (value := child.attrib.get(key, "").strip())
             )
             if "不正解" in details:
@@ -349,7 +559,7 @@ class AndroidSmoke:
         button = self.find_node(tree, prefix, prefix=True)
         if button is None:
             raise SmokeFailure(
-                f"Review control {prefix!r} is missing from the Android accessibility tree: "
+                f"Review control {prefix!r} is missing from the Slint scene: "
                 f"{self.describe_tree(tree)}"
             )
         label = " ".join(
@@ -386,8 +596,8 @@ class AndroidSmoke:
                         candidates.add(int(match.group(1)))
         if not candidates:
             raise SmokeFailure(
-                "Android accessibility exposes the review label but not its count; "
-                "expected the review label to include `、{count}問` or a numeric child/value."
+                "Slint accessible label exposes no review count; expected `、{count}問` "
+                "or a numeric child within the labeled control."
             )
         if len(candidates) != 1:
             raise SmokeFailure(f"Review control has ambiguous accessible counts: {sorted(candidates)}")
@@ -409,7 +619,7 @@ class AndroidSmoke:
         )
 
     def run_round(self, mode, title):
-        self.log(f"Starting full {mode} round through accessible controls")
+        self.log(f"Starting full {mode} round with native taps from live Slint geometry")
         tree = self.wait_for(
             lambda current: self.find_node(current, "クイズを始める") is not None,
             "home start button",
@@ -459,7 +669,7 @@ class AndroidSmoke:
                 points = 1
             answered = self.wait_for(
                 lambda current: self.answer_statuses(current) is not None,
-                f"four answer nodes exposing 正解/不正解 accessibility descriptions after question {number}",
+                f"four Slint answer elements exposing 正解/不正解 descriptions after question {number}",
             )
             statuses = self.answer_statuses(answered)
             if statuses[1]:
@@ -656,6 +866,7 @@ class AndroidSmoke:
         if not apk.is_file():
             raise SmokeFailure(f"Expected built debug APK at {apk}")
         self.adb_run("install", "-r", apk)
+        self.open_mcp_forward()
         self.report["device_model"] = self.adb_run(
             "shell", "getprop", "ro.product.model"
         ).stdout.decode().strip()
@@ -692,6 +903,15 @@ class AndroidSmoke:
         if chunks:
             (self.out / "android.log").write_bytes(b"".join(chunks))
 
+
+    def close(self):
+        if self.mcp_host_port is None:
+            return
+        self.adb_run(
+            "forward", "--remove", f"tcp:{self.mcp_host_port}", check=False
+        )
+        self.mcp_host_port = None
+
     def finish(self, status, error=None):
         self.report["status"] = status
         self.report["error"] = error
@@ -715,7 +935,10 @@ def main():
             smoke.save_diagnostics()
             smoke.collect_logs(include_crashes=True)
             smoke.finish("failed", str(error))
-        return 1
+            return 1
+    finally:
+        if smoke is not None:
+            smoke.close()
     return 0
 
 

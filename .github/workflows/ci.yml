@@ -148,7 +148,8 @@ jobs:
         run: |
           set -o pipefail
           ./android/gradlew -p android :app:assembleDebug \
-            -Pkunianki.androidAbi=x86_64 --console=plain \
+            -Pkunianki.androidAbi=x86_64 \
+            -Pkunianki.androidSmoke=true --console=plain \
             2>&1 | tee target/mobile-smoke/android-ci/android-build.log
 
       - name: Enable KVM

@@ -22,7 +22,18 @@ On Linux, install `build-essential`, `libxcb-shape0-dev`, `libxcb-xfixes0-dev`, 
 
 Run unit and headless end-to-end tests with `cargo test`.
 
-Native Android smoke tests run on an API 36 Emulator in CI. They use real accessibility/touch input and check progress after an app restart; screenshots and UI dumps are attached to the workflow run.
+Android smoke tests run on an API 36 Emulator in CI. Logs and screenshots are attached to the workflow run, including failures.
+
+Slint 1.18.1's `android-activity` backend does not expose native Android accessibility nodes, so TalkBack is not supported. This is a backend limitation, not a missing button label in the app.
+
+The Android test build exposes the live Slint scene over loopback MCP for element lookup. Input still uses native `adb` taps, and screenshots come from the Emulator. Only the opt-in debug build enables this server:
+
+```sh
+./android/gradlew -p android :app:assembleDebug -Pkunianki.androidAbi=x86_64 -Pkunianki.androidSmoke=true
+python3 scripts/android_smoke.py
+```
+
+Run this only with a dedicated Emulator. Do not distribute smoke builds; ordinary release builds do not include the test server or wrapper.
 
 ## Assets and release
 

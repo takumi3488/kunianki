@@ -6,6 +6,11 @@ version = "0.1.0"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+android-smoke = ["slint/mcp"]
+default = []
+
+
 [dependencies]
 fastrand = "2"
 serde = { version = "1", features = ["derive"] }
