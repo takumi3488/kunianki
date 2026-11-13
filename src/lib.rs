@@ -246,7 +246,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-fn android_main(app: slint::android::AndroidApp) {
+extern "Rust" fn android_main(app: slint::android::AndroidApp) {
     let data_dir = app.internal_data_path();
     if let Err(error) = slint::android::init(app) {
         eprintln!("failed to initialize Slint on Android: {error}");
