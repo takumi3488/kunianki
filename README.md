@@ -2,6 +2,12 @@
 
 A Japanese country quiz built with Rust and Slint.
 
+| Home | Mode select | Flag quiz |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/home.png" width="240" alt="Home screen"> | <img src="docs/screenshots/select.png" width="240" alt="Mode and region selection"> | <img src="docs/screenshots/quiz-flag-answered.png" width="240" alt="Answered flag question"> |
+| **Map quiz** | **Trivia quiz** | **Result** |
+| <img src="docs/screenshots/quiz-map.png" width="240" alt="Map question"> | <img src="docs/screenshots/quiz-trivia.png" width="240" alt="Trivia question with two hints"> | <img src="docs/screenshots/result.png" width="240" alt="Round result with missed countries"> |
+
 ## Run on desktop
 
 ```sh
