@@ -119,14 +119,16 @@ pub fn trivia_points(hints_revealed: u8) -> u32 {
 /// Builds the three Japanese hints in their reveal order.
 #[must_use]
 pub fn hints(country: &Country) -> [String; 3] {
+    // Languages, currencies, and capitals often contain the country name (韓国語, 韓国ウォン).
+    let mask = |hint: String| hint.replace(&country.name_ja, "〇〇");
     [
         country.trivia_ja.clone(),
-        format!(
+        mask(format!(
             "公用語：{}、通貨：{}",
             country.languages_ja.join("、"),
             country.currency_ja
-        ),
-        format!("首都：{}", country.capital_ja),
+        )),
+        mask(format!("首都：{}", country.capital_ja)),
     ]
 }
 
@@ -383,5 +385,19 @@ mod tests {
                 "首都：首都1".to_owned(),
             ]
         );
+    }
+
+    #[test]
+    fn hints_never_reveal_the_country_name() -> Result<(), Box<dyn std::error::Error>> {
+        for country in crate::data::load_countries()? {
+            for hint in hints(&country) {
+                assert!(
+                    !hint.contains(&country.name_ja),
+                    "{} hint reveals its name: {hint}",
+                    country.iso2
+                );
+            }
+        }
+        Ok(())
     }
 }
