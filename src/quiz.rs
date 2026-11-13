@@ -119,21 +119,12 @@ pub fn trivia_points(hints_revealed: u8) -> u32 {
 /// Builds the three Japanese hints in their reveal order.
 #[must_use]
 pub fn hints(country: &Country) -> [String; 3] {
-    // Languages, currencies, and capitals often contain the country name (韓国語, 韓国ウォン).
     let mask = |hint: String| {
         std::iter::once(&country.name_ja)
             .chain(&country.aliases_ja)
             .fold(hint, |hint, name| hint.replace(name.as_str(), "〇〇"))
     };
-    [
-        country.trivia_ja.clone(),
-        mask(format!(
-            "公用語：{}、通貨：{}",
-            country.languages_ja.join("、"),
-            country.currency_ja
-        )),
-        mask(format!("首都：{}", country.capital_ja)),
-    ]
+    country.trivia_ja.clone().map(mask)
 }
 
 fn question_kinds(mode: Mode, len: usize, rng: &mut fastrand::Rng) -> Vec<QuestionKind> {
@@ -205,9 +196,11 @@ mod tests {
             name_en: format!("Country {index}"),
             region,
             capital_ja: format!("首都{index}"),
-            languages_ja: vec![format!("言語{index}")],
-            currency_ja: format!("通貨{index}"),
-            trivia_ja: format!("雑学{index}"),
+            trivia_ja: [
+                format!("雑学{index}の第一"),
+                format!("雑学{index}の第二"),
+                format!("雑学{index}の第三"),
+            ],
         }
     }
 
@@ -380,14 +373,21 @@ mod tests {
     }
 
     #[test]
-    fn hints_are_revealed_in_order() {
-        let country = country(1, Region::Asia);
+    fn hints_are_revealed_in_order_and_mask_names() {
+        let mut country = country(1, Region::Asia);
+        country.aliases_ja.push("別名".to_owned());
+        country.trivia_ja = [
+            "国1の雑学".to_owned(),
+            "別名に関する雑学".to_owned(),
+            "最後の雑学".to_owned(),
+        ];
+
         assert_eq!(
             hints(&country),
             [
-                "雑学1".to_owned(),
-                "公用語：言語1、通貨：通貨1".to_owned(),
-                "首都：首都1".to_owned(),
+                "〇〇の雑学".to_owned(),
+                "〇〇に関する雑学".to_owned(),
+                "最後の雑学".to_owned(),
             ]
         );
     }
