@@ -39,22 +39,22 @@ For Intel-based simulator builds, also install the `x86_64-apple-ios` Rust targe
 
 ## Build for Android
 
-Install Android Studio's Android SDK and NDK, then install [`cargo-ndk`](https://github.com/bbqsrc/cargo-ndk) and the Rust target:
+Install Android Studio's Android SDK and NDK, then install [`cargo-ndk`](https://github.com/bbqsrc/cargo-ndk) and the Rust target. The Gradle wrapper in `android/` downloads the required Gradle version (JDK 17 or newer):
 
 ```sh
 rustup target add aarch64-linux-android
 cargo install cargo-ndk
 export ANDROID_HOME="$HOME/Library/Android/sdk"
-export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/<installed-version>"
-gradle -p android :app:assembleDebug
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/<installed-version>"
+./android/gradlew -p android :app:assembleDebug
 ```
 
-Set `ANDROID_HOME` and `ANDROID_NDK_ROOT` to the SDK/NDK locations on your machine. The Gradle task builds the Rust library for `arm64-v8a` and packages it with the Android application.
+Set `ANDROID_HOME` and `ANDROID_NDK_HOME` to the SDK/NDK locations on your machine. The Gradle task builds the Rust library for `arm64-v8a` and packages it with the Android application.
 
 ## Mobile smoke checklist
 
 - [ ] iOS simulator: run `xcodegen generate` in `ios/`, then build and launch from Xcode.
-- [ ] Android emulator: run `gradle -p android :app:installDebug` from the repo root (or `./gradlew -p android :app:installDebug` if using a Gradle wrapper), then launch the app.
+- [ ] Android emulator: run `./android/gradlew -p android :app:installDebug` from the repo root, then launch the app.
 - [ ] Confirm the app launches and Japanese text renders correctly.
 - [ ] Confirm flag and map questions display their images.
 - [ ] Answer questions, restart the app, and confirm progress persists.
