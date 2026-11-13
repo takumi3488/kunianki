@@ -201,6 +201,7 @@
   },
   {
     "iso2": "KP",
+    "aliases_ja": ["朝鮮"],
     "name_ja": "北朝鮮",
     "name_en": "North Korea",
     "region": "asia",

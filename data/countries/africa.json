@@ -4,7 +4,7 @@
   {"iso2":"BI","name_ja":"ブルンジ","name_en":"Burundi","region":"africa","capital_ja":"ギテガ","languages_ja":["フランス語","ルンディ語","英語"],"currency_ja":"ブルンジ・フラン","trivia_ja":"王族の儀式に由来する太鼓舞踊は無形文化遺産に登録"},
   {"iso2":"BJ","name_ja":"ベナン","name_en":"Benin","region":"africa","capital_ja":"ポルトノボ","languages_ja":["フランス語"],"currency_ja":"西アフリカCFAフラン","trivia_ja":"アボメーの王宮群はユネスコ世界遺産に登録されている"},
   {"iso2":"BW","name_ja":"ボツワナ","name_en":"Botswana","region":"africa","capital_ja":"ハボローネ","languages_ja":["英語","ツワナ語"],"currency_ja":"プラ","trivia_ja":"オカバンゴ・デルタは世界最大級の内陸デルタである"},
-  {"iso2":"CD","name_ja":"コンゴ民主共和国","name_en":"Democratic Republic of the Congo","region":"africa","capital_ja":"キンシャサ","languages_ja":["フランス語"],"currency_ja":"コンゴ・フラン","trivia_ja":"ビルンガ国立公園はアフリカ最古の国立公園として知られる"},
+  {"iso2":"CD","aliases_ja":["コンゴ"],"name_ja":"コンゴ民主共和国","name_en":"Democratic Republic of the Congo","region":"africa","capital_ja":"キンシャサ","languages_ja":["フランス語"],"currency_ja":"コンゴ・フラン","trivia_ja":"ビルンガ国立公園はアフリカ最古の国立公園として知られる"},
   {"iso2":"CF","name_ja":"中央アフリカ共和国","name_en":"Central African Republic","region":"africa","capital_ja":"バンギ","languages_ja":["サンゴ語","フランス語"],"currency_ja":"中部アフリカCFAフラン","trivia_ja":"南西部の保護区にはマルミミゾウや低地ゴリラが生息する"},
   {"iso2":"CG","name_ja":"コンゴ共和国","name_en":"Republic of the Congo","region":"africa","capital_ja":"ブラザヴィル","languages_ja":["フランス語"],"currency_ja":"中部アフリカCFAフラン","trivia_ja":"国土の広い範囲がコンゴ盆地の熱帯雨林に含まれる"},
   {"iso2":"CI","name_ja":"コートジボワール","name_en":"Côte d'Ivoire","region":"africa","capital_ja":"ヤムスクロ","languages_ja":["フランス語"],"currency_ja":"西アフリカCFAフラン","trivia_ja":"平和の聖母大聖堂は世界最大級の教会建築として知られる"},
@@ -50,7 +50,7 @@
   {"iso2":"TN","name_ja":"チュニジア","name_en":"Tunisia","region":"africa","capital_ja":"チュニス","languages_ja":["アラビア語"],"currency_ja":"チュニジア・ディナール","trivia_ja":"カルタゴ遺跡には古代フェニキア文明の遺構が残る"},
   {"iso2":"TZ","name_ja":"タンザニア","name_en":"Tanzania","region":"africa","capital_ja":"ドドマ","languages_ja":["スワヒリ語","英語"],"currency_ja":"タンザニア・シリング","trivia_ja":"キリマンジャロ山はアフリカ最高峰で、赤道近くに位置する"},
   {"iso2":"UG","name_ja":"ウガンダ","name_en":"Uganda","region":"africa","capital_ja":"カンパラ","languages_ja":["スワヒリ語","英語"],"currency_ja":"ウガンダ・シリング","trivia_ja":"ブウィンディ原生国立公園にはマウンテンゴリラが生息する"},
-  {"iso2":"ZA","name_ja":"南アフリカ共和国","name_en":"South Africa","region":"africa","capital_ja":"プレトリア（行政）・ケープタウン（立法）・ブルームフォンテーン（司法）","languages_ja":["アフリカーンス語","コサ語","スワジ語","ズールー語","ソト語","ツォンガ語","ツワナ語","ヴェンダ語","北ソト語","南アフリカ手話","南ンデベレ語","英語"],"currency_ja":"ランド","trivia_ja":"世界で唯一、首都機能を三つの都市に分担している"},
+  {"iso2":"ZA","aliases_ja":["南アフリカ"],"name_ja":"南アフリカ共和国","name_en":"South Africa","region":"africa","capital_ja":"プレトリア（行政）・ケープタウン（立法）・ブルームフォンテーン（司法）","languages_ja":["アフリカーンス語","コサ語","スワジ語","ズールー語","ソト語","ツォンガ語","ツワナ語","ヴェンダ語","北ソト語","南アフリカ手話","南ンデベレ語","英語"],"currency_ja":"ランド","trivia_ja":"世界で唯一、首都機能を三つの都市に分担している"},
   {"iso2":"ZM","name_ja":"ザンビア","name_en":"Zambia","region":"africa","capital_ja":"ルサカ","languages_ja":["英語"],"currency_ja":"ザンビア・クワチャ","trivia_ja":"ヴィクトリアの滝は幅約一・七キロの大瀑布として知られる"},
   {"iso2":"ZW","name_ja":"ジンバブエ","name_en":"Zimbabwe","region":"africa","capital_ja":"ハラレ","languages_ja":["カランガ語","コイサン語族","コサ語","ショナ語","ジンバブエ手話","ソト語","チェワ語","ツォンガ語","ツワナ語","トンガ語","ナンビャ語","バルウェ語","ンダウ語","ヴェンダ語","北ンデベレ語","英語"],"currency_ja":"ジンバブエ・ゴールド","trivia_ja":"マトボ丘陵には古代の岩絵が数多く残る"}
 ]
