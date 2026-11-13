@@ -120,7 +120,11 @@ pub fn trivia_points(hints_revealed: u8) -> u32 {
 #[must_use]
 pub fn hints(country: &Country) -> [String; 3] {
     // Languages, currencies, and capitals often contain the country name (韓国語, 韓国ウォン).
-    let mask = |hint: String| hint.replace(&country.name_ja, "〇〇");
+    let mask = |hint: String| {
+        std::iter::once(&country.name_ja)
+            .chain(&country.aliases_ja)
+            .fold(hint, |hint, name| hint.replace(name.as_str(), "〇〇"))
+    };
     [
         country.trivia_ja.clone(),
         mask(format!(
@@ -197,6 +201,7 @@ mod tests {
         Country {
             iso2: format!("C{index:02}"),
             name_ja: format!("国{index}"),
+            aliases_ja: Vec::new(),
             name_en: format!("Country {index}"),
             region,
             capital_ja: format!("首都{index}"),
@@ -391,11 +396,13 @@ mod tests {
     fn hints_never_reveal_the_country_name() -> Result<(), Box<dyn std::error::Error>> {
         for country in crate::data::load_countries()? {
             for hint in hints(&country) {
-                assert!(
-                    !hint.contains(&country.name_ja),
-                    "{} hint reveals its name: {hint}",
-                    country.iso2
-                );
+                for name in std::iter::once(&country.name_ja).chain(&country.aliases_ja) {
+                    assert!(
+                        !hint.contains(name.as_str()),
+                        "{} hint reveals {name}: {hint}",
+                        country.iso2
+                    );
+                }
             }
         }
         Ok(())

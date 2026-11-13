@@ -25,6 +25,9 @@ pub struct Country {
     pub iso2: String,
     /// Short country name in Japanese.
     pub name_ja: String,
+    /// Short names hidden from hints, such as マケドニア for 北マケドニア.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases_ja: Vec<String>,
     /// Country name in English.
     pub name_en: String,
     /// UN M49 region.
