@@ -82,11 +82,15 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --version 4.1.2 --locked
 
-      - name: Use latest Android NDK
+      - name: Use latest Android NDK and platform
         shell: bash
         run: |
           test -n "$ANDROID_NDK_LATEST_HOME"
           printf 'ANDROID_NDK_HOME=%s\n' "$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+          # Slint's Android build script compiles Java against android.jar and fails to find one by itself here
+          android_jar=$(find "$ANDROID_HOME/platforms" -path '*/android-[0-9]*/android.jar' | sort -V | tail -n 1)
+          test -n "$android_jar"
+          printf 'ANDROID_JAR=%s\n' "$android_jar" >> "$GITHUB_ENV"
 
       - name: Check Android target with Clippy
         run: cargo ndk -t arm64-v8a --platform 26 clippy --lib -- -D warnings
