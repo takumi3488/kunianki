@@ -1,0 +1,122 @@
+[
+  {
+    "iso2": "AR",
+    "name_ja": "アルゼンチン",
+    "name_en": "Argentina",
+    "region": "south_america",
+    "capital_ja": "ブエノスアイレス",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "アルゼンチン・ペソ",
+    "trivia_ja": "タンゴは19世紀後半にラプラタ川流域で生まれた音楽・舞踊である。"
+  },
+  {
+    "iso2": "BO",
+    "name_ja": "ボリビア",
+    "name_en": "Bolivia",
+    "region": "south_america",
+    "capital_ja": "スクレ",
+    "languages_ja": ["スペイン語", "ケチュア語", "アイマラ語", "グアラニー語"],
+    "currency_ja": "ボリビアーノ",
+    "trivia_ja": "ウユニ塩湖は世界最大級の塩原として知られる。"
+  },
+  {
+    "iso2": "BR",
+    "name_ja": "ブラジル",
+    "name_en": "Brazil",
+    "region": "south_america",
+    "capital_ja": "ブラジリア",
+    "languages_ja": ["ポルトガル語"],
+    "currency_ja": "レアル",
+    "trivia_ja": "アマゾン川流域には世界最大級の熱帯雨林が広がる。"
+  },
+  {
+    "iso2": "CL",
+    "name_ja": "チリ",
+    "name_en": "Chile",
+    "region": "south_america",
+    "capital_ja": "サンティアゴ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "チリ・ペソ",
+    "trivia_ja": "南北約4,300キロメートルにわたって細長く伸びる国土を持つ。"
+  },
+  {
+    "iso2": "CO",
+    "name_ja": "コロンビア",
+    "name_en": "Colombia",
+    "region": "south_america",
+    "capital_ja": "ボゴタ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "コロンビア・ペソ",
+    "trivia_ja": "コーヒー文化景観はユネスコの世界遺産に登録されている。"
+  },
+  {
+    "iso2": "EC",
+    "name_ja": "エクアドル",
+    "name_en": "Ecuador",
+    "region": "south_america",
+    "capital_ja": "キト",
+    "languages_ja": ["スペイン語", "キチュア語", "シュアール語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "1835年、若きチャールズ・ダーウィンがガラパゴス諸島を訪れた。"
+  },
+  {
+    "iso2": "GY",
+    "name_ja": "ガイアナ",
+    "name_en": "Guyana",
+    "region": "south_america",
+    "capital_ja": "ジョージタウン",
+    "languages_ja": ["英語"],
+    "currency_ja": "ガイアナ・ドル",
+    "trivia_ja": "カイエトゥール滝は落差約226メートルの世界有数の単段滝である。"
+  },
+  {
+    "iso2": "PE",
+    "name_ja": "ペルー",
+    "name_en": "Peru",
+    "region": "south_america",
+    "capital_ja": "リマ",
+    "languages_ja": ["スペイン語", "ケチュア語", "アイマラ語"],
+    "currency_ja": "ソル",
+    "trivia_ja": "ナスカの地上絵は、地表に刻まれた巨大な線や図形で知られる。"
+  },
+  {
+    "iso2": "PY",
+    "name_ja": "パラグアイ",
+    "name_en": "Paraguay",
+    "region": "south_america",
+    "capital_ja": "アスンシオン",
+    "languages_ja": ["スペイン語", "グアラニー語"],
+    "currency_ja": "グアラニー",
+    "trivia_ja": "イタイプー・ダムは国境をまたぐ世界最大級の水力発電所である。"
+  },
+  {
+    "iso2": "SR",
+    "name_ja": "スリナム",
+    "name_en": "Suriname",
+    "region": "south_america",
+    "capital_ja": "パラマリボ",
+    "languages_ja": ["オランダ語"],
+    "currency_ja": "スリナム・ドル",
+    "trivia_ja": "国土の約9割が熱帯雨林などの森林に覆われている。"
+  },
+  {
+    "iso2": "UY",
+    "name_ja": "ウルグアイ",
+    "name_en": "Uruguay",
+    "region": "south_america",
+    "capital_ja": "モンテビデオ",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ウルグアイ・ペソ",
+    "trivia_ja": "1930年に開催された第1回FIFAワールドカップで優勝した。"
+  },
+  {
+    "iso2": "VE",
+    "name_ja": "ベネズエラ",
+    "name_en": "Venezuela",
+    "region": "south_america",
+    "capital_ja": "カラカス",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ボリバル・ソベラノ",
+    "trivia_ja": "エンジェルフォールは落差約979メートルで世界最高の滝として知られる。"
+  }
+]

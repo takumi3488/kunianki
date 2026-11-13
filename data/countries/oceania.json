@@ -1,0 +1,142 @@
+[
+  {
+    "iso2": "AU",
+    "name_ja": "オーストラリア",
+    "name_en": "Australia",
+    "region": "oceania",
+    "capital_ja": "キャンベラ",
+    "languages_ja": ["英語"],
+    "currency_ja": "オーストラリア・ドル",
+    "trivia_ja": "北東岸沖に世界最大級のサンゴ礁群グレートバリアリーフが広がる。"
+  },
+  {
+    "iso2": "FJ",
+    "name_ja": "フィジー",
+    "name_en": "Fiji",
+    "region": "oceania",
+    "capital_ja": "スバ",
+    "languages_ja": ["フィジー語", "英語", "フィジー・ヒンディー語"],
+    "currency_ja": "フィジー・ドル",
+    "trivia_ja": "300を超える島々から成り、人が住む島はそのうち約100島である。"
+  },
+  {
+    "iso2": "FM",
+    "name_ja": "ミクロネシア連邦",
+    "name_en": "Federated States of Micronesia",
+    "region": "oceania",
+    "capital_ja": "パリキール",
+    "languages_ja": ["英語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "ヤップ州では、石灰岩の円盤石貨が伝統的に使われてきた。"
+  },
+  {
+    "iso2": "KI",
+    "name_ja": "キリバス",
+    "name_en": "Kiribati",
+    "region": "oceania",
+    "capital_ja": "サウス・タラワ",
+    "languages_ja": ["キリバス語", "英語"],
+    "currency_ja": "オーストラリア・ドル",
+    "trivia_ja": "国土は赤道と日付変更線の両側にまたがる。"
+  },
+  {
+    "iso2": "MH",
+    "name_ja": "マーシャル諸島",
+    "name_en": "Marshall Islands",
+    "region": "oceania",
+    "capital_ja": "マジュロ",
+    "languages_ja": ["マーシャル語", "英語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "ビキニ環礁では、1946年から1958年にかけて核実験が行われた。"
+  },
+  {
+    "iso2": "NR",
+    "name_ja": "ナウル",
+    "name_en": "Nauru",
+    "region": "oceania",
+    "capital_ja": "ヤレン地区",
+    "languages_ja": ["ナウル語", "英語"],
+    "currency_ja": "オーストラリア・ドル",
+    "trivia_ja": "リン鉱石の採掘が20世紀の経済を大きく支えた。"
+  },
+  {
+    "iso2": "NZ",
+    "name_ja": "ニュージーランド",
+    "name_en": "New Zealand",
+    "region": "oceania",
+    "capital_ja": "ウェリントン",
+    "languages_ja": ["英語", "マオリ語", "ニュージーランド手話"],
+    "currency_ja": "ニュージーランド・ドル",
+    "trivia_ja": "1893年、女性が国政選挙で投票する権利を初めて認めた自治領となった。"
+  },
+  {
+    "iso2": "PG",
+    "name_ja": "パプアニューギニア",
+    "name_en": "Papua New Guinea",
+    "region": "oceania",
+    "capital_ja": "ポートモレスビー",
+    "languages_ja": ["英語", "トク・ピシン", "ヒリモツ語", "パプア・ニューギニア手話"],
+    "currency_ja": "キナ",
+    "trivia_ja": "国内で800を超える言語が話されるとされる。"
+  },
+  {
+    "iso2": "PW",
+    "name_ja": "パラオ",
+    "name_en": "Palau",
+    "region": "oceania",
+    "capital_ja": "ンゲルルムッド",
+    "languages_ja": ["パラオ語", "英語"],
+    "currency_ja": "米ドル",
+    "trivia_ja": "ロックアイランド群は、海洋湖とともに世界遺産に登録されている。"
+  },
+  {
+    "iso2": "SB",
+    "name_ja": "ソロモン諸島",
+    "name_en": "Solomon Islands",
+    "region": "oceania",
+    "capital_ja": "ホニアラ",
+    "languages_ja": ["英語"],
+    "currency_ja": "ソロモン諸島ドル",
+    "trivia_ja": "第二次世界大戦中、ガダルカナル島で激しい戦闘が続いた。"
+  },
+  {
+    "iso2": "TO",
+    "name_ja": "トンガ",
+    "name_en": "Tonga",
+    "region": "oceania",
+    "capital_ja": "ヌクアロファ",
+    "languages_ja": ["トンガ語", "英語"],
+    "currency_ja": "パアンガ",
+    "trivia_ja": "祝祭や集まりでは、地中の土釜で料理を蒸す習慣がある。"
+  },
+  {
+    "iso2": "TV",
+    "name_ja": "ツバル",
+    "name_en": "Tuvalu",
+    "region": "oceania",
+    "capital_ja": "フナフティ島",
+    "languages_ja": ["ツバル語", "英語"],
+    "currency_ja": "オーストラリア・ドル",
+    "trivia_ja": "国別インターネットドメイン「.tv」の利用権を国外企業に貸与している。"
+  },
+  {
+    "iso2": "VU",
+    "name_ja": "バヌアツ",
+    "name_en": "Vanuatu",
+    "region": "oceania",
+    "capital_ja": "ポートビラ",
+    "languages_ja": ["ビスラマ語", "英語", "フランス語"],
+    "currency_ja": "バツ",
+    "trivia_ja": "国内では100を超える現地語が話され、言語密度が非常に高い。"
+  },
+  {
+    "iso2": "WS",
+    "name_ja": "サモア",
+    "name_en": "Samoa",
+    "region": "oceania",
+    "capital_ja": "アピア",
+    "languages_ja": ["サモア語", "英語"],
+    "currency_ja": "タラ",
+    "trivia_ja": "伝統的な集会所「ファレ」は、屋根を柱で支える構造を持つ。"
+  }
+]

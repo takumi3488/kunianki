@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mcpls": {
+      "args": [],
+      "command": "mcpls",
+      "type": "stdio"
+    },
+    "slint": {
+      "type": "http",
+      "url": "http://127.0.0.1:9315/mcp"
+    },
+    "slint-docs": {
+      "type": "http",
+      "url": "https://docs.slint.dev/mcp"
+    }
+  }
+}

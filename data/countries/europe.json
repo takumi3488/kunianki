@@ -1,0 +1,432 @@
+[
+  {
+    "iso2": "AD",
+    "name_ja": "アンドラ",
+    "name_en": "Andorra",
+    "region": "europe",
+    "capital_ja": "アンドラ・ラ・ベリャ",
+    "languages_ja": ["カタルーニャ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "国土の大部分がピレネー山脈の山岳地帯にある。"
+  },
+  {
+    "iso2": "AL",
+    "name_ja": "アルバニア",
+    "name_en": "Albania",
+    "region": "europe",
+    "capital_ja": "ティラナ",
+    "languages_ja": ["アルバニア語"],
+    "currency_ja": "レク",
+    "trivia_ja": "ベラトの歴史地区は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "AT",
+    "name_ja": "オーストリア",
+    "name_en": "Austria",
+    "region": "europe",
+    "capital_ja": "ウィーン",
+    "languages_ja": ["ドイツ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "作曲家モーツァルトが生まれたザルツブルク旧市街は世界遺産。"
+  },
+  {
+    "iso2": "BA",
+    "name_ja": "ボスニア・ヘルツェゴビナ",
+    "name_en": "Bosnia and Herzegovina",
+    "region": "europe",
+    "capital_ja": "サラエヴォ",
+    "languages_ja": ["ボスニア語", "クロアチア語", "セルビア語"],
+    "currency_ja": "兌換マルク",
+    "trivia_ja": "モスタルの旧橋は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "BE",
+    "name_ja": "ベルギー",
+    "name_en": "Belgium",
+    "region": "europe",
+    "capital_ja": "ブリュッセル",
+    "languages_ja": ["オランダ語", "フランス語", "ドイツ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "漫画タンタンの作者エルジェはこの国の出身。"
+  },
+  {
+    "iso2": "BG",
+    "name_ja": "ブルガリア",
+    "name_en": "Bulgaria",
+    "region": "europe",
+    "capital_ja": "ソフィア",
+    "languages_ja": ["ブルガリア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "古代都市ネセバルの旧市街は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "BY",
+    "name_ja": "ベラルーシ",
+    "name_en": "Belarus",
+    "region": "europe",
+    "capital_ja": "ミンスク",
+    "languages_ja": ["ベラルーシ語", "ロシア語"],
+    "currency_ja": "ベラルーシ・ルーブル",
+    "trivia_ja": "ベラヴェジの森はヨーロッパ最後の原生林の一つとされる。"
+  },
+  {
+    "iso2": "CH",
+    "name_ja": "スイス",
+    "name_en": "Switzerland",
+    "region": "europe",
+    "capital_ja": "ベルン",
+    "languages_ja": ["ドイツ語", "フランス語", "イタリア語", "ロマンシュ語"],
+    "currency_ja": "スイス・フラン",
+    "trivia_ja": "国土の約6割をアルプス山脈が占める。"
+  },
+  {
+    "iso2": "CZ",
+    "name_ja": "チェコ",
+    "name_en": "Czechia",
+    "region": "europe",
+    "capital_ja": "プラハ",
+    "languages_ja": ["チェコ語"],
+    "currency_ja": "チェコ・コルナ",
+    "trivia_ja": "チェスキー・クルムロフの歴史地区は世界遺産。"
+  },
+  {
+    "iso2": "DE",
+    "name_ja": "ドイツ",
+    "name_en": "Germany",
+    "region": "europe",
+    "capital_ja": "ベルリン",
+    "languages_ja": ["ドイツ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ケルン大聖堂は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "DK",
+    "name_ja": "デンマーク",
+    "name_en": "Denmark",
+    "region": "europe",
+    "capital_ja": "コペンハーゲン",
+    "languages_ja": ["デンマーク語"],
+    "currency_ja": "デンマーク・クローネ",
+    "trivia_ja": "1583年創業の遊園地バッケンは世界最古級とされる。"
+  },
+  {
+    "iso2": "EE",
+    "name_ja": "エストニア",
+    "name_en": "Estonia",
+    "region": "europe",
+    "capital_ja": "タリン",
+    "languages_ja": ["エストニア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "国歌の旋律は隣国フィンランドの国歌と同じ曲。"
+  },
+  {
+    "iso2": "ES",
+    "name_ja": "スペイン",
+    "name_en": "Spain",
+    "region": "europe",
+    "capital_ja": "マドリード",
+    "languages_ja": ["スペイン語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "アルタミラ洞窟の壁画は先史時代の芸術として知られる。"
+  },
+  {
+    "iso2": "FI",
+    "name_ja": "フィンランド",
+    "name_en": "Finland",
+    "region": "europe",
+    "capital_ja": "ヘルシンキ",
+    "languages_ja": ["フィンランド語", "スウェーデン語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "サウナはユネスコの無形文化遺産に登録されている。"
+  },
+  {
+    "iso2": "FR",
+    "name_ja": "フランス",
+    "name_en": "France",
+    "region": "europe",
+    "capital_ja": "パリ",
+    "languages_ja": ["フランス語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "モン・サン＝ミシェルとその湾は世界遺産。"
+  },
+  {
+    "iso2": "GB",
+    "name_ja": "英国",
+    "name_en": "United Kingdom",
+    "region": "europe",
+    "capital_ja": "ロンドン",
+    "languages_ja": ["英語"],
+    "currency_ja": "スターリング・ポンド",
+    "trivia_ja": "ストーンヘンジと周辺の先史時代遺跡群は世界遺産。"
+  },
+  {
+    "iso2": "GR",
+    "name_ja": "ギリシャ",
+    "name_en": "Greece",
+    "region": "europe",
+    "capital_ja": "アテネ",
+    "languages_ja": ["ギリシア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "デルフォイの古代遺跡は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "HR",
+    "name_ja": "クロアチア",
+    "name_en": "Croatia",
+    "region": "europe",
+    "capital_ja": "ザグレブ",
+    "languages_ja": ["クロアチア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ドゥブロヴニク旧市街はアドリア海沿岸の世界遺産。"
+  },
+  {
+    "iso2": "HU",
+    "name_ja": "ハンガリー",
+    "name_en": "Hungary",
+    "region": "europe",
+    "capital_ja": "ブダペスト",
+    "languages_ja": ["ハンガリー語"],
+    "currency_ja": "フォリント",
+    "trivia_ja": "バラトン湖は中欧最大の湖とされる。"
+  },
+  {
+    "iso2": "IE",
+    "name_ja": "アイルランド",
+    "name_en": "Ireland",
+    "region": "europe",
+    "capital_ja": "ダブリン",
+    "languages_ja": ["アイルランド語", "英語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ニューグレンジの先史時代遺跡はストーンヘンジより古い。"
+  },
+  {
+    "iso2": "IS",
+    "name_ja": "アイスランド",
+    "name_en": "Iceland",
+    "region": "europe",
+    "capital_ja": "レイキャヴィーク",
+    "languages_ja": ["アイスランド語"],
+    "currency_ja": "アイスランド・クローナ",
+    "trivia_ja": "地熱を発電や暖房に広く利用している。"
+  },
+  {
+    "iso2": "IT",
+    "name_ja": "イタリア",
+    "name_en": "Italy",
+    "region": "europe",
+    "capital_ja": "ローマ",
+    "languages_ja": ["イタリア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ピサの斜塔は建設中から傾いていたことで知られる。"
+  },
+  {
+    "iso2": "LI",
+    "name_ja": "リヒテンシュタイン",
+    "name_en": "Liechtenstein",
+    "region": "europe",
+    "capital_ja": "ファドゥーツ",
+    "languages_ja": ["ドイツ語"],
+    "currency_ja": "スイス・フラン",
+    "trivia_ja": "ライン川上流のアルプス山麓に位置する。"
+  },
+  {
+    "iso2": "LT",
+    "name_ja": "リトアニア",
+    "name_en": "Lithuania",
+    "region": "europe",
+    "capital_ja": "ヴィリニュス",
+    "languages_ja": ["リトアニア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "クルシュー砂州は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "LU",
+    "name_ja": "ルクセンブルク",
+    "name_en": "Luxembourg",
+    "region": "europe",
+    "capital_ja": "ルクセンブルク市",
+    "languages_ja": ["ルクセンブルク語", "フランス語", "ドイツ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "中世に築かれた要塞群が旧市街とともに世界遺産に登録。"
+  },
+  {
+    "iso2": "LV",
+    "name_ja": "ラトビア",
+    "name_en": "Latvia",
+    "region": "europe",
+    "capital_ja": "リガ",
+    "languages_ja": ["ラトビア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "バルト海沿岸のユールマラは長い砂浜で知られる。"
+  },
+  {
+    "iso2": "MC",
+    "name_ja": "モナコ",
+    "name_en": "Monaco",
+    "region": "europe",
+    "capital_ja": "モナコ",
+    "languages_ja": ["フランス語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "毎年開かれる自動車レースの市街地コースが有名。"
+  },
+  {
+    "iso2": "MD",
+    "name_ja": "モルドバ",
+    "name_en": "Moldova",
+    "region": "europe",
+    "capital_ja": "キシナウ",
+    "languages_ja": ["ルーマニア語"],
+    "currency_ja": "モルドバ・レウ",
+    "trivia_ja": "世界最大級のワインセラーがある地下トンネルは観光名所。"
+  },
+  {
+    "iso2": "ME",
+    "name_ja": "モンテネグロ",
+    "name_en": "Montenegro",
+    "region": "europe",
+    "capital_ja": "ポドゴリツァ",
+    "languages_ja": ["モンテネグロ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ドゥルミトル国立公園には氷河湖やタラ渓谷がある。"
+  },
+  {
+    "iso2": "MK",
+    "name_ja": "北マケドニア",
+    "name_en": "North Macedonia",
+    "region": "europe",
+    "capital_ja": "スコピエ",
+    "languages_ja": ["マケドニア語", "アルバニア語"],
+    "currency_ja": "マケドニア・デナール",
+    "trivia_ja": "オフリド湖はヨーロッパ最古級の湖の一つとされる。"
+  },
+  {
+    "iso2": "MT",
+    "name_ja": "マルタ",
+    "name_en": "Malta",
+    "region": "europe",
+    "capital_ja": "バレッタ",
+    "languages_ja": ["マルタ語", "英語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "先史時代の巨石神殿群は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "NL",
+    "name_ja": "オランダ",
+    "name_en": "Netherlands",
+    "region": "europe",
+    "capital_ja": "アムステルダム",
+    "languages_ja": ["オランダ語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "国土の約4分の1が海面より低い。"
+  },
+  {
+    "iso2": "NO",
+    "name_ja": "ノルウェー",
+    "name_en": "Norway",
+    "region": "europe",
+    "capital_ja": "オスロ",
+    "languages_ja": ["ノルウェー語", "サーミ語"],
+    "currency_ja": "ノルウェー・クローネ",
+    "trivia_ja": "海岸には氷河に削られたフィヨルドが数多くある。"
+  },
+  {
+    "iso2": "PL",
+    "name_ja": "ポーランド",
+    "name_en": "Poland",
+    "region": "europe",
+    "capital_ja": "ワルシャワ",
+    "languages_ja": ["ポーランド語"],
+    "currency_ja": "ズウォティ",
+    "trivia_ja": "ヴィエリチカ岩塩坑は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "PT",
+    "name_ja": "ポルトガル",
+    "name_en": "Portugal",
+    "region": "europe",
+    "capital_ja": "リスボン",
+    "languages_ja": ["ポルトガル語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ジェロニモス修道院は大航海時代に建てられた世界遺産。"
+  },
+  {
+    "iso2": "RO",
+    "name_ja": "ルーマニア",
+    "name_en": "Romania",
+    "region": "europe",
+    "capital_ja": "ブカレスト",
+    "languages_ja": ["ルーマニア語"],
+    "currency_ja": "ルーマニア・レウ",
+    "trivia_ja": "トランシルヴァニア地方には中世の要塞教会が数多く残る。"
+  },
+  {
+    "iso2": "RS",
+    "name_ja": "セルビア",
+    "name_en": "Serbia",
+    "region": "europe",
+    "capital_ja": "ベオグラード",
+    "languages_ja": ["セルビア語"],
+    "currency_ja": "セルビア・ディナール",
+    "trivia_ja": "ストゥデニツァ修道院は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "RU",
+    "name_ja": "ロシア",
+    "name_en": "Russia",
+    "region": "europe",
+    "capital_ja": "モスクワ",
+    "languages_ja": ["ロシア語"],
+    "currency_ja": "ロシア・ルーブル",
+    "trivia_ja": "世界最大の国土面積を持ち、11の標準時帯にまたがる。"
+  },
+  {
+    "iso2": "SE",
+    "name_ja": "スウェーデン",
+    "name_en": "Sweden",
+    "region": "europe",
+    "capital_ja": "ストックホルム",
+    "languages_ja": ["スウェーデン語"],
+    "currency_ja": "スウェーデン・クローナ",
+    "trivia_ja": "北部のキルナでは鉄鉱石の大規模な採掘が行われている。"
+  },
+  {
+    "iso2": "SI",
+    "name_ja": "スロベニア",
+    "name_en": "Slovenia",
+    "region": "europe",
+    "capital_ja": "リュブリャナ",
+    "languages_ja": ["スロベニア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "シュコツィアン洞窟群は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "SK",
+    "name_ja": "スロバキア",
+    "name_en": "Slovakia",
+    "region": "europe",
+    "capital_ja": "ブラチスラヴァ",
+    "languages_ja": ["スロバキア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "ドブシナ氷穴は世界遺産に登録されている。"
+  },
+  {
+    "iso2": "SM",
+    "name_ja": "サンマリノ",
+    "name_en": "San Marino",
+    "region": "europe",
+    "capital_ja": "サンマリノ市",
+    "languages_ja": ["イタリア語"],
+    "currency_ja": "ユーロ",
+    "trivia_ja": "世界で最も古い共和国の一つとされ、創建年は301年と伝わる。"
+  },
+  {
+    "iso2": "UA",
+    "name_ja": "ウクライナ",
+    "name_en": "Ukraine",
+    "region": "europe",
+    "capital_ja": "キーウ",
+    "languages_ja": ["ウクライナ語"],
+    "currency_ja": "フリヴニャ",
+    "trivia_ja": "チェルノブイリ原子力発電所の事故は1986年に起きた。"
+  }
+]

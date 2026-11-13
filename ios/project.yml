@@ -1,0 +1,36 @@
+name: kunianki
+options:
+  bundleIdPrefix: dev.kunianki
+settings:
+  ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  kunianki:
+    type: application
+    platform: iOS
+    deploymentTarget: "13.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kunianki.app
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: 国あんき
+        CADisableMinimumFrameDurationOnPhone: true
+        UILaunchScreen:
+          - ImageRespectSafeAreaInsets: false
+        LSRequiresIPhoneOS: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Slint
+                UISceneDelegateClassName: SlintWindowSceneDelegate
+    sources: []
+    postCompileScripts:
+      - name: Build Slint app with Cargo
+        script: |
+          ./build_for_ios_with_cargo.bash kunianki
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)
