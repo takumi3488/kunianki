@@ -34,12 +34,8 @@ pub struct Country {
     pub region: Region,
     /// Capital city in Japanese.
     pub capital_ja: String,
-    /// Official languages in Japanese.
-    pub languages_ja: Vec<String>,
-    /// Currency in Japanese.
-    pub currency_ja: String,
-    /// A short Japanese trivia fact.
-    pub trivia_ja: String,
+    /// Three Japanese trivia hints in reveal order, from least to most famous.
+    pub trivia_ja: [String; 3],
 }
 
 /// Loads and sorts the country records embedded from all six region files.
@@ -110,35 +106,43 @@ mod tests {
                 "empty capital: {}",
                 country.iso2
             );
-            assert!(
-                !country.currency_ja.trim().is_empty(),
-                "empty currency: {}",
-                country.iso2
-            );
-            assert!(
-                !country.trivia_ja.trim().is_empty(),
-                "empty trivia: {}",
-                country.iso2
-            );
-            assert!(
-                !country.languages_ja.is_empty()
-                    && country
-                        .languages_ja
+            for (index, hint) in country.trivia_ja.iter().enumerate() {
+                assert!(
+                    !hint.trim().is_empty(),
+                    "empty trivia hint {}: {}",
+                    index + 1,
+                    country.iso2
+                );
+                assert!(
+                    hint.chars().count() <= 60,
+                    "trivia hint {} exceeds 60 characters: {}",
+                    index + 1,
+                    country.iso2
+                );
+                assert!(
+                    !hint.contains(country.name_ja.as_str()),
+                    "trivia hint {} contains country name: {}",
+                    index + 1,
+                    country.iso2
+                );
+                assert!(
+                    country
+                        .aliases_ja
                         .iter()
-                        .all(|language| !language.trim().is_empty()),
-                "empty language list or value: {}",
-                country.iso2
-            );
-            assert!(
-                !country.trivia_ja.contains(country.name_ja.as_str()),
-                "trivia contains country name: {}",
-                country.iso2
-            );
-            assert!(
-                !country.trivia_ja.contains(country.capital_ja.as_str()),
-                "trivia contains capital: {}",
-                country.iso2
-            );
+                        .all(|alias| alias.is_empty() || !hint.contains(alias.as_str())),
+                    "trivia hint {} contains country alias: {}",
+                    index + 1,
+                    country.iso2
+                );
+                if index < 2 {
+                    assert!(
+                        !hint.contains(country.capital_ja.as_str()),
+                        "trivia hint {} contains capital: {}",
+                        index + 1,
+                        country.iso2
+                    );
+                }
+            }
 
             *region_counts.entry(country.region).or_insert(0) += 1;
 
