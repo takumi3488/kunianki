@@ -59,9 +59,10 @@ component ActionButton inherits Rectangle {
 
 component BackButton inherits Rectangle {
     callback tapped();
+    in property <string> label: "ホーム";
 
     accessible-role: button;
-    accessible-label: "ホーム";
+    accessible-label: root.label;
     accessible-action-default => { root.tapped(); }
     width: 88px;
     height: 36px;
@@ -77,7 +78,7 @@ component BackButton inherits Rectangle {
         }
 
         Text {
-            text: "ホーム";
+            text: root.label;
             color: AtlasColors.muted;
             font-size: 14px;
             vertical-alignment: center;
@@ -215,6 +216,9 @@ component MissedRow inherits Rectangle {
 export component AppWindow inherits Window {
     in-out property <string> screen: "home";
     in property <int> review-count;
+    in property <string> privacy-text: "";
+    in property <string> flag-license-text: "";
+    in property <string> font-license-text: "";
     callback start-round(int, int);
     callback start-review();
     in property <int> question-number;
@@ -415,7 +419,7 @@ export component AppWindow inherits Window {
 
             Rectangle {
                 accessible-role: button;
-                accessible-label: "まちがえた国を復習";
+                accessible-label: "まちがえた国を復習、\{root.review-count}問";
                 accessible-enabled: root.review-count > 0;
                 accessible-action-default => {
                     if (root.review-count > 0) {
@@ -1130,6 +1134,28 @@ export component AppWindow inherits Window {
             }
 
             Rectangle {
+                height: 10px;
+                background: transparent;
+            }
+
+            ActionButton {
+                label: "プライバシーポリシー";
+                height: 48px;
+                tapped => { root.screen = "privacy"; }
+            }
+
+            Rectangle {
+                height: 8px;
+                background: transparent;
+            }
+
+            ActionButton {
+                label: "ライセンス";
+                height: 48px;
+                tapped => { root.screen = "licenses"; }
+            }
+
+            Rectangle {
                 vertical-stretch: 1;
                 background: transparent;
             }
@@ -1139,6 +1165,78 @@ export component AppWindow inherits Window {
                 AboutSlint {
                     width: 154px;
                     height: 40px;
+                }
+            }
+        }
+        if root.screen == "privacy" || root.screen == "licenses": VerticalLayout {
+            padding: 20px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 36px;
+                BackButton {
+                    label: "戻る";
+                    tapped => { root.screen = "about"; }
+                }
+            }
+
+            Rectangle {
+                height: 18px;
+                background: transparent;
+            }
+
+            ScrollView {
+                width: 100%;
+                vertical-stretch: 1;
+                vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+                mouse-drag-pan-enabled: true;
+
+                VerticalLayout {
+                    width: 100%;
+                    padding-bottom: 20px;
+                    spacing: 14px;
+
+                    if root.screen == "privacy": Text {
+                        text: root.privacy-text;
+                        width: 100%;
+                        color: AtlasColors.ink;
+                        font-size: 14px;
+                        wrap: word-wrap;
+                    }
+
+                    if root.screen == "licenses": Text {
+                        text: "国旗アイコン · flag-icons · MIT License";
+                        width: 100%;
+                        color: AtlasColors.ink;
+                        font-size: 16px;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+
+                    if root.screen == "licenses": Text {
+                        text: root.flag-license-text;
+                        width: 100%;
+                        color: AtlasColors.ink;
+                        font-size: 13px;
+                        wrap: word-wrap;
+                    }
+
+                    if root.screen == "licenses": Text {
+                        text: "日本語書体 · Noto Sans JP · SIL Open Font License 1.1";
+                        width: 100%;
+                        color: AtlasColors.ink;
+                        font-size: 16px;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+
+                    if root.screen == "licenses": Text {
+                        text: root.font-license-text;
+                        width: 100%;
+                        color: AtlasColors.ink;
+                        font-size: 13px;
+                        wrap: word-wrap;
+                    }
                 }
             }
         }

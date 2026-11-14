@@ -55,9 +55,9 @@ fn append_asset_lookup(source: &mut String, function: &str, directory: &str) -> 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=ui/app-window.slint");
-    // ElementHandle needs compiler metadata to traverse accessible labels in debug builds.
+    // ElementHandle needs compiler metadata for live scene inspection.
     let mut config = slint_build::CompilerConfiguration::new();
-    if cfg!(debug_assertions) {
+    if cfg!(debug_assertions) || env::var_os("CARGO_FEATURE_ANDROID_SMOKE").is_some() {
         config = config.with_debug_info(true);
     }
     slint_build::compile_with_config("ui/app-window.slint", config)?;

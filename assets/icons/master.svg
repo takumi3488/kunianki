@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Folded atlas with a locator disc</title>
+  <rect id="canvas" width="1024" height="1024" fill="#edf3f1" />
+  <g id="atlas-mark" stroke-linecap="round" stroke-linejoin="round">
+    <path id="panel-left" d="M226 280 L427 228 L427 710 L226 765 Z" fill="#ffffff" />
+    <path id="panel-center" d="M427 228 L588 289 L588 771 L427 710 Z" fill="#dce9e4" />
+    <path id="panel-right" d="M588 289 L798 234 L798 716 L588 771 Z" fill="#ffffff" />
+    <path id="map-outline" d="M226 280 L427 228 L588 289 L798 234 L798 716 L588 771 L427 710 L226 765 Z" fill="none" stroke="#173a45" stroke-width="28" />
+    <path id="map-fold-left" d="M427 228 L427 710" fill="none" stroke="#173a45" stroke-width="18" />
+    <path id="map-fold-right" d="M588 289 L588 771" fill="none" stroke="#173a45" stroke-width="18" />
+    <path id="route" d="M274 560 C326 516 360 465 410 480 C450 492 468 532 516 503 C555 480 581 446 628 436" fill="none" stroke="#173a45" stroke-width="18" />
+    <path id="locator-disc" d="M688 376 C721.137 376 748 402.863 748 436 C748 469.137 721.137 496 688 496 C654.863 496 628 469.137 628 436 C628 402.863 654.863 376 688 376 Z" fill="#e65c43" stroke="#173a45" stroke-width="16" />
+    <path id="locator-center" d="M688 418 C697.941 418 706 426.059 706 436 C706 445.941 697.941 454 688 454 C678.059 454 670 445.941 670 436 C670 426.059 678.059 418 688 418 Z" fill="#edf3f1" />
+  </g>
+</svg>

@@ -6,3 +6,11 @@ __pycache__/
 /android/build
 /android/app/build
 /android/local.properties
+/android/keystore.properties
+*.jks
+*.keystore
+/ios/**/*.cer
+/ios/**/*.mobileprovision
+/ios/**/*.p12
+/ios/**/*.p8
+/ios/**/*.provisionprofile

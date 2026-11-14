@@ -7,17 +7,24 @@ targets:
   kunianki:
     type: application
     platform: iOS
-    deploymentTarget: "13.0"
+    deploymentTarget: "16.0"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.kunianki.app
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Info.plist
       properties:
         CFBundleDisplayName: 国あんき
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CADisableMinimumFrameDurationOnPhone: true
         UILaunchScreen:
-          - ImageRespectSafeAreaInsets: false
+          UIColorName: LaunchBackground
+          UIImageName: LaunchMark
+          UIImageRespectsSafeAreaInsets: false
         LSRequiresIPhoneOS: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -27,10 +34,22 @@ targets:
             UIWindowSceneSessionRoleApplication:
               - UISceneConfigurationName: Slint
                 UISceneDelegateClassName: SlintWindowSceneDelegate
-    sources: []
+    sources:
+      - path: ../assets/icons/ios/Assets.xcassets
+        buildPhase: resources
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
     postCompileScripts:
       - name: Build Slint app with Cargo
         script: |
           ./build_for_ios_with_cargo.bash kunianki
+        basedOnDependencyAnalysis: false
         outputFiles:
           - $(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)
+schemes:
+  kunianki:
+    build:
+      targets:
+        kunianki: all
+    archive:
+      config: Release

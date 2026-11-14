@@ -87,6 +87,9 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
         None => fastrand::Rng::new(),
     };
     let ui = AppWindow::new()?;
+    ui.set_privacy_text(include_str!("../docs/privacy.md").into());
+    ui.set_flag_license_text(include_str!("../assets/flags/LICENSE").into());
+    ui.set_font_license_text(include_str!("../assets/fonts/OFL.txt").into());
     let state = Rc::new(RefCell::new(AppState {
         countries,
         progress,
