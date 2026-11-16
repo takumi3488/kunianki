@@ -2,7 +2,6 @@
 """Exercise the Android app using Slint scene inspection and native input."""
 
 import json
-import os
 import re
 import shutil
 import socket
@@ -139,6 +138,7 @@ class AndroidSmoke:
         }
         self.mcp_host_port = None
         self.rpc_id = 0
+        self.native_tap_diagnostics_captured = False
         self.latest_scene = None
         self.latest_scene_json = ""
 
@@ -373,11 +373,33 @@ class AndroidSmoke:
                 f"Slint element {description!r} center {(x, y)} is outside native "
                 f"window bounds {node.window_bounds}"
             )
-        self.adb_run("shell", "input", "tap", x, y)
+        if not self.native_tap_diagnostics_captured:
+            self.native_tap_diagnostics_captured = True
+            self.capture_native_tap_state("before")
+            self.adb_run("shell", "input", "tap", x, y)
+            self.capture_native_tap_state("after")
+        else:
+            self.adb_run("shell", "input", "tap", x, y)
         self.log(
             f"Native tap: {description} at Slint scene bounds "
             f"[{left},{top}][{right},{bottom}]"
         )
+
+    def capture_native_tap_state(self, phase):
+        state = []
+        for service in ("window", "input"):
+            try:
+                result = self.adb_run("shell", "dumpsys", service, check=False)
+                state.append(
+                    f"--- dumpsys {service} (exit {result.returncode}) ---\n".encode()
+                    + result.stdout
+                    + result.stderr
+                )
+            except Exception as error:
+                state.append(f"--- dumpsys {service} failed: {error} ---\n".encode())
+        path = self.diagnostic_dir / f"native-tap-{phase}-window-input.txt"
+        path.write_bytes(b"\n".join(state))
+        self.log(f"Captured native window/input state: {path.name}")
 
     def tap_label(self, tree, label, prefix=False):
         buttons = [
