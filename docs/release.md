@@ -2,7 +2,7 @@
 
 ## 現状
 
-この文書と `store/ja-JP/` の文面は提出素材です。本番用の署名・アップロード・公開は未実施です。アプリIDは既存値 `dev.kunianki.app` を維持します。ストアアカウント所有者が利用権限と最終IDを確認・承認するまで、ID登録やストア操作は行いません。
+署名済みiOS App StoreアーカイブとIPAは準備済みです。App Store Connectへのアップロード、TestFlight配信、公開はまだ行っていません。アプリIDは既存値 `dev.kunianki.app` を維持し、App Store Connectアプリレコードの作成など残るストア操作はアカウント所有者の確認後に行います。
 
 ## ローカルのリリースビルド
 
@@ -50,9 +50,11 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates
 ```
 
-成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/` 内の `.ipa` です。`ios/ExportOptions.plist` は `app-store-connect` 配布、`automatic` 署名を指定します。公開版・ビルド番号は `ios/project.yml` で更新し、XcodeGenで再生成してください。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
+成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/kunianki.ipa` です。`ios/ExportOptions.plist` の自動署名テンプレートは変更せず、今回のローカル署名では `target/release/ios/ExportOptions.manual.plist` の手動設定を使いました。これは無視対象の生成物で、証明書・秘密鍵・パスワードはリポジトリに保存しません。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
 
-ローカルで生成した未署名の検証用アーカイブは `target/release/ios/kunianki-unsigned.xcarchive` です。arm64、iPhone/iPad、最低iOS 16.0、AppIcon・起動画像・プライバシーマニフェストを確認済みで、本番用の署名やIPA書き出しは行っていません。
+iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside Down、Landscape Left、Landscape Rightをサポートします。`UIRequiresFullScreen` は追加していません。iOS 26.5のiPad Pro 13-inch (M5) Simulatorで、ホーム・出題方法/地域選択・3ヒント問題の各画面をPortraitとLandscapeで確認し、ヒント表示と回答ボタンを操作するXCUITestが成功しました。
+
+ローカルの未署名検証用アーカイブ `target/release/ios/kunianki-unsigned.xcarchive` は、arm64、iPhone/iPad、最低iOS 16.0、AppIcon・起動画像・プライバシーマニフェストの確認用です。これは署名済み配布アーカイブとは別の成果物です。
 
 ## ストア掲載情報・提出物
 
@@ -75,8 +77,8 @@ xcodebuild -exportArchive \
 
 ## 外部アカウント・署名の未解決事項
 
-- **アカウントとID:** Apple Developer / App Store Connect、Google Play Consoleの利用権限とアカウント所有者は未確認です。所有者が `dev.kunianki.app` を最終IDとして承認し、各ストアに登録してください。Androidのパッケージ名は作成後に変更・再利用できません。
-- **iOS署名:** 有効なApple Distribution証明書、対応するApp Store provisioning profile、チームIDがありません。確認済みの `Developer ID Application: SmartCrab LLC` はmacOS Developer IDであり、iOS App Store署名には使用できません。Appleアカウント所有者が自分のチームを選び、Xcode自動署名で必要な証明書とプロファイルを用意・承認してください。
+- **アカウントとID:** Team `673KN54RQ5` に `dev.kunianki.app` のApp IDが登録済みです。App Store Connectアプリレコードは未作成です。Google Play Consoleの利用権限・アカウント所有者とAndroidのパッケージ情報は別途確認が必要です。
+- **iOS署名:** 専用iOS Distribution証明書とApp Store provisioning profileを作成し、手動署名のアーカイブとIPAを生成済みです。App Store ConnectへのアップロードとTestFlight配信は未実施です。既存の `Developer ID Application` 証明書はmacOS用で、iOS署名には使用していません。
 - **Android署名:** アップロードキーストアはありません。所有者が鍵を新規作成するか既存鍵を使うか、保管責任者と復旧手順を決めた後に安全な署名環境を用意してください。Play App Signingのアプリ署名鍵とアップロード鍵は別の役割です。
 - **連絡先とポリシーURL:** Google Playの連絡先メールは必須です。実際に管理するアカウント所有者が有効な宛先を指定してください。ポリシーURLは `main` ブランチの公開ページを使い、提出前にログインなしで閲覧できることを確認してください。
 
