@@ -2,7 +2,7 @@
 
 ## 現状
 
-署名済みiOS App StoreアーカイブとIPAは準備済みです。App Store Connectへのアップロード、TestFlight配信、公開はまだ行っていません。アプリIDは既存値 `dev.kunianki.app` を維持し、App Store Connectアプリレコードの作成など残るストア操作はアカウント所有者の確認後に行います。
+App Store Connectの内部TestFlightでは、バージョン0.1.0 (1) を招待済みの内部テスターが利用中です。公開App Store・Google Playへのリリースと実機iPhone/iPadでの確認は未実施です。
 
 ## ローカルのリリースビルド
 
@@ -50,9 +50,11 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates
 ```
 
-成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/kunianki.ipa` です。`ios/ExportOptions.plist` の自動署名テンプレートは変更せず、今回のローカル署名では `target/release/ios/ExportOptions.manual.plist` の手動設定を使いました。これは無視対象の生成物で、証明書・秘密鍵・パスワードはリポジトリに保存しません。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
+成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/kunianki.ipa` です。`ios/ExportOptions.plist` の自動署名テンプレートは変更せず、今回のローカル署名では `target/release/ios/ExportOptions.manual.plist` の手動設定を使いました。これは無視対象の生成物で、証明書・秘密鍵・パスワードはリポジトリに保存しません。次回App Store Connectへアップロードする前に、`CURRENT_PROJECT_VERSION` を直前のアップロード済みビルド番号より大きい値に更新してください。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
 
 iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside Down、Landscape Left、Landscape Rightをサポートします。`UIRequiresFullScreen` は追加していません。iOS 26.5のiPad Pro 13-inch (M5) Simulatorで、ホーム・出題方法/地域選択・3ヒント問題の各画面をPortraitとLandscapeで確認し、ヒント表示と回答ボタンを操作するXCUITestが成功しました。
+
+`ITSAppUsesNonExemptEncryption` は現在 `false` です。現行アプリはオフラインで、バンドル済みJSON/画像とJSON形式の進捗、クイズ用乱数を使い、アプリ独自の暗号化やネットワーク/TLSを実装していません。暗号機能や通信を追加した場合は輸出コンプライアンス申告を再確認してください。
 
 ローカルの未署名検証用アーカイブ `target/release/ios/kunianki-unsigned.xcarchive` は、arm64、iPhone/iPad、最低iOS 16.0、AppIcon・起動画像・プライバシーマニフェストの確認用です。これは署名済み配布アーカイブとは別の成果物です。
 
@@ -75,10 +77,10 @@ iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside
 
 ストアURLは [`https://github.com/takumi3488/kunianki/issues`](https://github.com/takumi3488/kunianki/issues) と [`https://github.com/takumi3488/kunianki/blob/main/docs/privacy.md`](https://github.com/takumi3488/kunianki/blob/main/docs/privacy.md) を使います。Google Play掲載前に、プライバシーポリシーがこのHTTPS URLでログインなしに世界中から閲覧できることを確認してください。連絡先メールや開発者の法人名はリポジトリから確認できないため、推測で記入しません。
 
-## 外部アカウント・署名の未解決事項
+## 外部配信の状況と未解決事項
 
-- **アカウントとID:** Team `673KN54RQ5` に `dev.kunianki.app` のApp IDが登録済みです。App Store Connectアプリレコードは未作成です。Google Play Consoleの利用権限・アカウント所有者とAndroidのパッケージ情報は別途確認が必要です。
-- **iOS署名:** 専用iOS Distribution証明書とApp Store provisioning profileを作成し、手動署名のアーカイブとIPAを生成済みです。App Store ConnectへのアップロードとTestFlight配信は未実施です。既存の `Developer ID Application` 証明書はmacOS用で、iOS署名には使用していません。
+- **アカウントとID:** App Store Connectの「国あんき」レコード (ID `6835406487`、Bundle ID `dev.kunianki.app`) はTeam `673KN54RQ5` に作成済みです。Google Play Consoleの利用権限・所有者とAndroidパッケージ名は別途確認が必要です。
+- **iOS配信:** バージョン0.1.0 (1) は内部TestFlightで `IN_BETA_TESTING` です。内部グループのテスターは所有者1名のみで招待済みです。公開App Storeへのリリースと実機確認は未実施です。
 - **Android署名:** アップロードキーストアはありません。所有者が鍵を新規作成するか既存鍵を使うか、保管責任者と復旧手順を決めた後に安全な署名環境を用意してください。Play App Signingのアプリ署名鍵とアップロード鍵は別の役割です。
 - **連絡先とポリシーURL:** Google Playの連絡先メールは必須です。実際に管理するアカウント所有者が有効な宛先を指定してください。ポリシーURLは `main` ブランチの公開ページを使い、提出前にログインなしで閲覧できることを確認してください。
 
