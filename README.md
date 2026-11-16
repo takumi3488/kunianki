@@ -24,7 +24,13 @@ On Linux, install `build-essential`, `libxcb-shape0-dev`, `libxcb-xfixes0-dev`, 
 
 Run unit and headless end-to-end tests with `cargo test`.
 
-Android smoke tests run on an API 36 Emulator in CI. Logs and screenshots are attached to the workflow run, including failures.
+Android smoke tests run on an API 36 Emulator in CI. Logs, screenshots, and first-tap window/input diagnostics are attached to the workflow run, including failures.
+
+Check that smoke startup failures produce a nonzero exit status without an SDK or device:
+
+```sh
+python3 -m unittest discover -s scripts -p test_android_smoke.py
+```
 
 Slint 1.18.1's `android-activity` backend does not expose native Android accessibility nodes, so TalkBack is not supported. This is a backend limitation, not a missing button label in the app.
 

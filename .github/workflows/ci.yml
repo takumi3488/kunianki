@@ -117,6 +117,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Test Android smoke CLI failure exit
+        run: python3 -m unittest discover -s scripts -p test_android_smoke.py
+
       - name: Prepare smoke artifact directory
         run: |
           mkdir -p target/mobile-smoke/android-ci

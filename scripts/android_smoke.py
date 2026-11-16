@@ -2,6 +2,7 @@
 """Exercise the Android app using Slint scene inspection and native input."""
 
 import json
+import os
 import re
 import shutil
 import socket
@@ -998,7 +999,7 @@ def main():
             smoke.save_diagnostics()
             smoke.collect_logs(include_crashes=True)
             smoke.finish("failed", str(error))
-            return 1
+        return 1
     finally:
         if smoke is not None:
             smoke.close()
