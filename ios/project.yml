@@ -20,6 +20,7 @@ targets:
         CFBundleDisplayName: 国あんき
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false
         CADisableMinimumFrameDurationOnPhone: true
         UILaunchScreen:
           UIColorName: LaunchBackground
