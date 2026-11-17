@@ -2,6 +2,8 @@
 
 A Japanese country quiz built with Rust and Slint.
 
+During a quiz, **中断** asks for confirmation. Answered progress is kept; an unfinished question is discarded.
+
 | Home (iOS) | Mode select (Android) | Flag quiz (Android) |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/home.png" width="240" alt="Native iPhone home screen"> | <img src="docs/screenshots/select.png" width="240" alt="Native Android mode and region selection"> | <img src="docs/screenshots/quiz-flag-answered.png" width="240" alt="Native Android answered flag question"> |

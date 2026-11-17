@@ -130,6 +130,7 @@ component AnswerTile inherits Rectangle {
     in property <int> selected-index: -1;
     in property <int> correct-index: -1;
     in property <bool> answered: false;
+    in property <bool> enabled: true;
     callback tapped(int);
 
     accessible-role: button;
@@ -137,9 +138,9 @@ component AnswerTile inherits Rectangle {
     accessible-description: root.answered
         ? (root.choice-index == root.correct-index ? "正解" : "不正解")
         : "";
-    accessible-enabled: !root.answered;
+    accessible-enabled: root.enabled && !root.answered;
     accessible-action-default => {
-        if (!root.answered) {
+        if (root.enabled && !root.answered) {
             root.tapped(root.choice-index);
         }
     }
@@ -166,7 +167,7 @@ component AnswerTile inherits Rectangle {
 
     TouchArea {
         clicked => {
-            if (!root.answered) {
+            if (root.enabled && !root.answered) {
                 root.tapped(root.choice-index);
             }
         }
@@ -239,6 +240,7 @@ export component AppWindow inherits Window {
     in property <int> result-score;
     in property <[MissedItem]> missed;
     callback go-home();
+    in-out property <bool> quit-confirmation-open: false;
 
     private property <int> chosen-mode: 0;
     private property <int> chosen-region: 0;
@@ -686,7 +688,7 @@ export component AppWindow inherits Window {
             spacing: 0px;
 
             HorizontalLayout {
-                height: 36px;
+                height: 48px;
                 spacing: 8px;
                 Text {
                     text: "第 \{root.question-number} 問";
@@ -707,6 +709,35 @@ export component AppWindow inherits Window {
                     font-size: 13px;
                     font-weight: 600;
                     vertical-alignment: center;
+                }
+
+                Rectangle {
+                    width: 68px;
+                    height: 48px;
+                    border-radius: 12px;
+                    background: AtlasColors.paper;
+                    accessible-role: button;
+                    accessible-label: "クイズを中断";
+                    accessible-action-default => {
+                        root.quit-confirmation-open = true;
+                    }
+
+                    Text {
+                        text: "中断";
+                        color: AtlasColors.accent;
+                        font-size: 13px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        width: 100%;
+                        height: 100%;
+                    }
+
+                    TouchArea {
+                        clicked => {
+                            root.quit-confirmation-open = true;
+                        }
+                    }
                 }
             }
 
@@ -824,7 +855,7 @@ export component AppWindow inherits Window {
             if root.kind == "trivia" && !root.answered: ActionButton {
                 accessible-name: "次のヒントを見る";
                 label: root.can-reveal-hint ? "次のヒントを見る" : "ヒントをすべて表示済み";
-                enabled: root.can-reveal-hint && !root.answered;
+                enabled: root.can-reveal-hint && !root.answered && !root.quit-confirmation-open;
                 height: 48px;
                 tapped => { root.reveal-hint(); }
             }
@@ -842,6 +873,7 @@ export component AppWindow inherits Window {
                     selected-index: root.selected-index;
                     correct-index: root.correct-index;
                     answered: root.answered;
+                    enabled: !root.quit-confirmation-open;
                     tapped(index) => { root.answer(index); }
                 }
             }
@@ -854,7 +886,74 @@ export component AppWindow inherits Window {
 
             if root.answered: ActionButton {
                 label: "次の問題へ";
+                enabled: !root.quit-confirmation-open;
                 tapped => { root.next-question(); }
+            }
+        }
+        if root.screen == "quiz" && root.quit-confirmation-open: Rectangle {
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: transparent;
+
+            Rectangle {
+                width: 100%;
+                height: 100%;
+                background: AtlasColors.ink;
+                opacity: 0.56;
+
+                TouchArea {
+                    clicked => {}
+                }
+            }
+
+            Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: parent.width < 392px ? parent.width - 32px : 360px;
+                height: 270px;
+                border-radius: 20px;
+                background: AtlasColors.paper;
+
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 10px;
+
+                    Text {
+                        text: "クイズを中断しますか？";
+                        color: AtlasColors.ink;
+                        font-size: 20px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+
+                    Text {
+                        text: "回答済みの記録は残ります。";
+                        color: AtlasColors.muted;
+                        font-size: 14px;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        height: 4px;
+                        background: transparent;
+                    }
+
+                    ActionButton {
+                        label: "続ける";
+                        height: 52px;
+                        tapped => {
+                            root.quit-confirmation-open = false;
+                        }
+                    }
+
+                    ActionButton {
+                        label: "ホームへ戻る";
+                        height: 52px;
+                        tapped => { root.go-home(); }
+                    }
+                }
             }
         }
 

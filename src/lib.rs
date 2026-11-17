@@ -131,6 +131,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             if state.session.question().is_none() {
                 return;
             }
+            ui.set_quit_confirmation_open(false);
             set_question(&ui, &state);
             ui.set_screen("quiz".into());
         });
@@ -158,6 +159,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
                 set_review_count(&ui, &state.progress);
                 return;
             }
+            ui.set_quit_confirmation_open(false);
             set_question(&ui, &state);
             ui.set_screen("quiz".into());
         });
@@ -170,6 +172,10 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             let Some(ui) = weak_ui.upgrade() else {
                 return;
             };
+            if ui.get_screen().as_str() != "quiz" || ui.get_quit_confirmation_open() {
+                return;
+            }
+
             let Ok(selected) = usize::try_from(selected) else {
                 return;
             };
@@ -205,6 +211,10 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             let Some(ui) = weak_ui.upgrade() else {
                 return;
             };
+            if ui.get_screen().as_str() != "quiz" || ui.get_quit_confirmation_open() {
+                return;
+            }
+
             let mut state = state.borrow_mut();
             if state.session.reveal_hint() {
                 set_question(&ui, &state);
@@ -219,6 +229,10 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             let Some(ui) = weak_ui.upgrade() else {
                 return;
             };
+            if ui.get_screen().as_str() != "quiz" || ui.get_quit_confirmation_open() {
+                return;
+            }
+
             let mut state = state.borrow_mut();
             match state.session.next() {
                 session::Next::Question => set_question(&ui, &state),
@@ -238,6 +252,8 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
                 return;
             };
             let mut state = state.borrow_mut();
+            ui.set_quit_confirmation_open(false);
+
             state.session = session::Session::default();
             set_review_count(&ui, &state.progress);
             ui.set_screen("home".into());
