@@ -219,6 +219,22 @@ fn first_trivia_answer_index() -> Result<usize, Box<dyn Error>> {
     Ok(first_question.answer)
 }
 
+fn first_flag_answer_index() -> Result<usize, Box<dyn Error>> {
+    let countries = data::load_countries()?;
+    let mut rng = fastrand::Rng::with_seed(TEST_SEED);
+    let first_question = quiz::generate_round(
+        &countries,
+        quiz::Mode::Flag,
+        quiz::RegionFilter::All,
+        &mut rng,
+        10,
+    )
+    .into_iter()
+    .next()
+    .ok_or_else(|| io::Error::other("seeded flag round has no questions"))?;
+    Ok(first_question.answer)
+}
+
 fn first_review_answer_index(progress_data: &TestProgress) -> Result<usize, Box<dyn Error>> {
     let countries = data::load_countries()?;
     let progress = progress::Progress::load(&progress_data.file);
@@ -342,6 +358,27 @@ fn double_tapping_an_answer_records_it_only_once() -> Result<(), Box<dyn Error>>
     button.invoke_accessible_default_action();
     assert_eq!(app.get_score(), saved_score);
     assert_eq!(app.get_review_count(), saved_review_count);
+    let history = fs::read_to_string(progress.directory.join("answer-history.jsonl"))?;
+    assert_eq!(history.lines().count(), 1);
+    let saved_record: serde_json::Value = serde_json::from_str(
+        history
+            .lines()
+            .next()
+            .ok_or_else(|| io::Error::other("answer history is empty"))?,
+    )?;
+    assert!(saved_record["answered_at_ms"].as_i64().is_some());
+    assert_eq!(saved_record["kind"], "flag");
+    assert!(saved_record["correct_iso2"].as_str().is_some());
+    assert!(saved_record["selected_iso2"].as_str().is_some());
+    assert!(saved_record["hints_shown"].as_u64().is_some());
+    assert!(saved_record["points"].as_u64().is_some());
+    assert_eq!(saved_record["review"].as_bool(), Some(false));
+    assert_eq!(saved_record["correct"].as_bool(), Some(correct_index == 0));
+    assert_eq!(
+        saved_record["choice_iso2"].as_array().map(Vec::len),
+        Some(4)
+    );
+    assert!(saved_record["elapsed_ms"].as_u64().is_some());
     Ok(())
 }
 
@@ -349,6 +386,7 @@ fn double_tapping_an_answer_records_it_only_once() -> Result<(), Box<dyn Error>>
 fn trivia_hints_limit_and_scoring_follow_revealed_count() -> Result<(), Box<dyn Error>> {
     i_slint_backend_testing::init_no_event_loop();
     let progress = TestProgress::new()?;
+    let history_path = progress.directory.join("answer-history.jsonl");
     let app = test_app(&progress)?;
     start_round(&app, "3ヒント", "全地域")?;
 
@@ -362,9 +400,15 @@ fn trivia_hints_limit_and_scoring_follow_revealed_count() -> Result<(), Box<dyn 
     invoke(&app, "次のヒントを見る")?;
     assert_eq!(app.get_hints().row_count(), 3);
 
+    assert!(
+        !history_path.exists(),
+        "revealing hints must not record an answer"
+    );
+
     let (first_correct, _, first_score_delta) = answer_question(&app, 0)?;
     assert_eq!(first_score_delta, i32::from(first_correct));
     assert_eq!(app.get_score(), first_score_delta);
+    assert_eq!(fs::read_to_string(&history_path)?.lines().count(), 1);
     invoke(&app, "次の問題へ")?;
     assert_eq!(app.get_hints().row_count(), 1);
     invoke(&app, "次のヒントを見る")?;
@@ -373,6 +417,7 @@ fn trivia_hints_limit_and_scoring_follow_revealed_count() -> Result<(), Box<dyn 
     let (second_correct, _, second_score_delta) = answer_question(&app, 0)?;
     assert_eq!(second_score_delta, if second_correct { 2 } else { 0 });
     assert_eq!(app.get_score() - score_before_answer, second_score_delta);
+    assert_eq!(fs::read_to_string(&history_path)?.lines().count(), 2);
     Ok(())
 }
 
@@ -1079,6 +1124,7 @@ fn about_pages_show_privacy_and_license_notices() -> Result<(), Box<dyn Error>> 
         app.get_privacy_text()
             .contains("本アプリは個人情報を収集しません")
     );
+    assert!(app.get_privacy_text().contains("answer-history.jsonl"));
 
     invoke(&app, "戻る")?;
     assert_eq!(app.get_screen().as_str(), "about");
@@ -1095,6 +1141,223 @@ fn about_pages_show_privacy_and_license_notices() -> Result<(), Box<dyn Error>> 
 
     invoke(&app, "戻る")?;
     assert_eq!(app.get_screen().as_str(), "about");
+    Ok(())
+}
+
+fn history_row_count(progress: &TestProgress) -> io::Result<usize> {
+    match fs::read_to_string(progress.directory.join("answer-history.jsonl")) {
+        Ok(history) => Ok(history.lines().count()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(0),
+        Err(error) => Err(error),
+    }
+}
+
+#[test]
+fn history_opens_with_an_empty_state() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_screen().as_str(), "history");
+    assert!(app.get_history_empty());
+    assert_eq!(app.get_history_items().row_count(), 0);
+    invoke(&app, "ホーム")?;
+    assert_eq!(app.get_screen().as_str(), "home");
+    Ok(())
+}
+
+#[test]
+fn history_pages_keep_all_answers_reachable() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "国旗", "全地域")?;
+    let _missed = finish_flag_round(&app)?;
+    assert_eq!(app.get_screen().as_str(), "result");
+    invoke(&app, "ホームへ戻る")?;
+    invoke(&app, "回答履歴を見る")?;
+
+    assert!(!app.get_history_empty());
+    let newest = app
+        .get_history_items()
+        .row_data(0)
+        .ok_or_else(|| io::Error::other("newest history row is missing"))?;
+    assert_ne!(newest.timestamp.as_str(), "");
+    assert!(newest.outcome.as_str().contains("国旗"));
+    assert!(newest.countries.as_str().contains("正解"));
+    assert!(newest.details.as_str().contains("回答時間"));
+    assert_eq!(app.get_history_items().row_count(), 8);
+    assert_eq!(app.get_history_page_label().as_str(), "1 / 2");
+    assert!(app.get_history_has_older());
+    invoke(&app, "古い記録")?;
+    assert_eq!(app.get_history_items().row_count(), 2);
+    assert_eq!(app.get_history_page_label().as_str(), "2 / 2");
+    assert!(app.get_history_has_newer());
+    assert!(!app.get_history_has_older());
+    invoke(&app, "新しい記録")?;
+    assert_eq!(app.get_history_items().row_count(), 8);
+    assert_eq!(app.get_history_page_label().as_str(), "1 / 2");
+    Ok(())
+}
+
+#[test]
+fn history_append_failure_is_visible_without_losing_progress() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    fs::create_dir(progress.directory.join("answer-history.jsonl"))?;
+    let app = test_app(&progress)?;
+    start_round(&app, "国旗", "全地域")?;
+    answer_question(&app, 0)?;
+
+    assert!(
+        app.get_storage_warning()
+            .contains("回答履歴を保存できませんでした")
+    );
+    assert!(progress.file.is_file(), "SRS progress must still be saved");
+    Ok(())
+}
+
+#[test]
+fn malformed_history_warns_and_keeps_valid_rows() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let history_path = progress.directory.join("answer-history.jsonl");
+    let valid_row = r#"{"answered_at_ms":1000,"kind":"flag","correct_iso2":"JP","selected_iso2":"US","correct":false,"hints_shown":0,"points":0,"elapsed_ms":321,"choice_iso2":["JP","US","FR","CN"],"review":false}"#;
+    let original = format!("{valid_row}\n{{\"incomplete\":");
+    fs::write(&history_path, original.as_bytes())?;
+    let app = test_app(&progress)?;
+
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_history_items().row_count(), 1);
+    assert!(
+        app.get_storage_warning()
+            .contains("履歴ファイルの一部を読み込めませんでした")
+    );
+    assert_eq!(fs::read(&history_path)?.as_slice(), original.as_bytes());
+    Ok(())
+}
+
+#[test]
+fn redundant_next_keeps_the_current_question_timer_running() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "国旗", "全地域")?;
+
+    std::thread::sleep(Duration::from_millis(40));
+    app.invoke_next_question();
+    answer_question(&app, 0)?;
+
+    let history = fs::read_to_string(progress.directory.join("answer-history.jsonl"))?;
+    let saved_record: serde_json::Value = serde_json::from_str(
+        history
+            .lines()
+            .next()
+            .ok_or_else(|| io::Error::other("answer history is empty"))?,
+    )?;
+    let elapsed_ms = saved_record["elapsed_ms"]
+        .as_u64()
+        .ok_or_else(|| io::Error::other("elapsed time is missing"))?;
+    assert!(
+        elapsed_ms >= 40,
+        "redundant next must not reset elapsed time, got {elapsed_ms} ms"
+    );
+    Ok(())
+}
+
+#[test]
+fn all_malformed_history_shows_an_error_without_modifying_the_file() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let history_path = progress.directory.join("answer-history.jsonl");
+    let original = b"{malformed}\n[]\n";
+    fs::write(&history_path, original)?;
+    let app = test_app(&progress)?;
+
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_screen().as_str(), "history");
+    assert!(app.get_history_empty());
+    assert_eq!(app.get_history_items().row_count(), 0);
+    assert!(
+        ElementHandle::find_by_accessible_label(
+            &app,
+            "履歴を表示できませんでした（元データは保持しています）"
+        )
+        .next()
+        .is_some(),
+        "unreadable history should show an error instead of the welcome message"
+    );
+    assert!(
+        app.get_storage_warning()
+            .contains("履歴ファイルの一部を読み込めませんでした")
+    );
+    assert_eq!(fs::read(&history_path)?.as_slice(), original);
+    Ok(())
+}
+
+#[test]
+fn history_persists_accepted_answers_and_ignores_quit_events() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "国旗", "全地域")?;
+
+    invoke(&app, "クイズを中断")?;
+    app.invoke_answer(0);
+    app.invoke_next_question();
+    assert!(!app.get_answered());
+    assert_eq!(history_row_count(&progress)?, 0);
+    assert!(!progress.file.exists());
+    invoke(&app, "続ける")?;
+
+    let correct_index = first_flag_answer_index()?;
+    let choice_count = app.get_choices().row_count();
+    let wrong_index = (correct_index + 1) % choice_count;
+    let (correct, _, _) = answer_question(&app, wrong_index)?;
+    assert!(!correct);
+    assert_eq!(history_row_count(&progress)?, 1);
+    assert_eq!(app.get_review_count(), 1);
+
+    invoke(&app, "クイズを中断")?;
+    invoke(&app, "ホームへ戻る")?;
+    assert_eq!(app.get_screen().as_str(), "home");
+    assert_eq!(app.get_review_count(), 1);
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_history_items().row_count(), 1);
+    assert_eq!(
+        progress::Progress::load(&progress.file).review_keys().len(),
+        1
+    );
+
+    drop(app);
+    let app = test_app(&progress)?;
+    assert_eq!(app.get_review_count(), 1);
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_history_items().row_count(), 1);
+    invoke(&app, "ホーム")?;
+
+    start_round(&app, "3ヒント", "全地域")?;
+    invoke(&app, "次のヒントを見る")?;
+    let shown_hints = app.get_hints().row_count();
+    invoke(&app, "クイズを中断")?;
+    app.invoke_answer(0);
+    app.invoke_next_question();
+    app.invoke_reveal_hint();
+    assert!(!app.get_answered());
+    assert_eq!(app.get_hints().row_count(), shown_hints);
+    assert_eq!(history_row_count(&progress)?, 1);
+    invoke(&app, "ホームへ戻る")?;
+    app.invoke_answer(0);
+    app.invoke_next_question();
+    app.invoke_reveal_hint();
+    invoke(&app, "回答履歴を見る")?;
+    assert_eq!(app.get_history_items().row_count(), 1);
+    assert_eq!(history_row_count(&progress)?, 1);
+    assert_eq!(
+        progress::Progress::load(&progress.file).review_keys().len(),
+        1
+    );
     Ok(())
 }
 

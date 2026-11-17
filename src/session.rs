@@ -8,6 +8,11 @@ pub struct AnswerOutcome {
     country_index: usize,
     kind: QuestionKind,
     correct: bool,
+    selected_country_index: usize,
+    choice_country_indices: [usize; 4],
+    hints_shown: u8,
+    points: u32,
+    review: bool,
 }
 
 impl AnswerOutcome {
@@ -27,6 +32,36 @@ impl AnswerOutcome {
     #[must_use]
     pub const fn correct(self) -> bool {
         self.correct
+    }
+
+    /// Returns the country index selected by the user.
+    #[must_use]
+    pub const fn selected_country_index(self) -> usize {
+        self.selected_country_index
+    }
+
+    /// Returns country indexes in the order presented for this question.
+    #[must_use]
+    pub const fn choice_country_indices(self) -> [usize; 4] {
+        self.choice_country_indices
+    }
+
+    /// Returns the number of hints shown when the answer was accepted.
+    #[must_use]
+    pub const fn hints_shown(self) -> u8 {
+        self.hints_shown
+    }
+
+    /// Returns the points awarded for this answer.
+    #[must_use]
+    pub const fn points(self) -> u32 {
+        self.points
+    }
+
+    /// Returns whether this question came from a review round.
+    #[must_use]
+    pub const fn review(self) -> bool {
+        self.review
     }
 }
 
@@ -49,17 +84,28 @@ pub struct Session {
     missed_country_indices: Vec<usize>,
     selected_index: Option<usize>,
     hints_shown: u8,
+    review: bool,
 }
 
 impl Session {
     /// Starts a round, replacing any existing questions and resetting its progress.
     pub fn start(&mut self, questions: Vec<Question>) {
+        self.start_with_review(questions, false);
+    }
+
+    /// Starts a review round.
+    pub fn start_review(&mut self, questions: Vec<Question>) {
+        self.start_with_review(questions, true);
+    }
+
+    fn start_with_review(&mut self, questions: Vec<Question>, review: bool) {
         self.questions = questions;
         self.question_index = 0;
         self.score = 0;
         self.correct_count = 0;
         self.missed_country_indices.clear();
         self.selected_index = None;
+        self.review = review;
         self.hints_shown = u8::from(
             self.question()
                 .is_some_and(|question| question.kind == QuestionKind::Trivia),
@@ -129,6 +175,8 @@ impl Session {
 
         let country_index = question.country;
         let kind = question.kind;
+        let choice_country_indices = question.choices;
+        let selected_country_index = choice_country_indices[choice];
         let correct = choice == question.answer;
         let points = if correct {
             match kind {
@@ -151,6 +199,11 @@ impl Session {
             country_index,
             kind,
             correct,
+            selected_country_index,
+            choice_country_indices,
+            hints_shown: self.hints_shown,
+            points,
+            review: self.review,
         })
     }
 
@@ -245,6 +298,25 @@ mod tests {
                 "hints shown: {expected_hints}"
             );
         }
+        Ok(())
+    }
+
+    #[test]
+    fn accepted_answer_captures_history_fields_and_review_context() -> Result<(), Box<dyn Error>> {
+        let mut session = Session::default();
+        session.start_review(vec![question(2, QuestionKind::Trivia)]);
+        assert!(session.reveal_hint());
+
+        let Some(outcome) = session.answer(1) else {
+            return Err("valid answer should be accepted".into());
+        };
+        assert_eq!(outcome.country_index(), 2);
+        assert_eq!(outcome.selected_country_index(), 1);
+        assert_eq!(outcome.choice_country_indices(), [0, 1, 2, 3]);
+        assert_eq!(outcome.hints_shown(), 2);
+        assert_eq!(outcome.points(), 0);
+        assert!(!outcome.correct());
+        assert!(outcome.review());
         Ok(())
     }
 
