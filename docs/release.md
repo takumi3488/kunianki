@@ -2,7 +2,7 @@
 
 ## 現状
 
-App Store Connectの内部TestFlightでは、バージョン0.1.0 (2) を招待済みの内部テスターが利用できます。地図の拡大縮小・移動、クイズ中断確認、詳細な回答履歴を反映済みです。公開App Store・Google Playへのリリースと実機iPhone/iPadでの確認は未実施です。
+App Store Connectの内部TestFlightでは、バージョン0.1.0 (3) を招待済みの内部テスターが利用できます。地図の拡大縮小・移動、クイズ中断確認、詳細な回答履歴に加え、白を含む国旗の枠表示を反映済みです。公開App Store・Google Playへのリリースと実機iPhone/iPadでの確認は未実施です。
 
 ## ローカルのリリースビルド
 
@@ -52,7 +52,7 @@ xcodebuild -exportArchive \
 
 成果物は `target/release/ios/kunianki.xcarchive` と `target/release/ios/export/kunianki.ipa` です。`ios/ExportOptions.plist` の自動署名テンプレートは変更せず、今回のローカル署名では `target/release/ios/ExportOptions.manual.plist` の手動設定を使いました。これは無視対象の生成物で、証明書・秘密鍵・パスワードはリポジトリに保存しません。次回App Store Connectへアップロードする前に、`CURRENT_PROJECT_VERSION` を直前のアップロード済みビルド番号より大きい値に更新してください。`CODE_SIGNING_ALLOWED=NO` は未署名の検証専用であり、この配布アーカイブには使いません。
 
-現在の配布用IPAは `target/release/ios/testflight-0.1.0-2/export/kunianki.ipa`、署名済みアーカイブは同じディレクトリ内の `kunianki.xcarchive` です。
+現在の配布用IPAは `target/release/ios/testflight-0.1.0-3/export/kunianki.ipa`、署名済みアーカイブは同じディレクトリ内の `kunianki.xcarchive` です。
 
 iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside Down、Landscape Left、Landscape Rightをサポートします。`UIRequiresFullScreen` は追加していません。iOS 26.5のiPad Pro 13-inch (M5) Simulatorで、ホーム・出題方法/地域選択・3ヒント問題の各画面をPortraitとLandscapeで確認し、ヒント表示と回答ボタンを操作するXCUITestが成功しました。
 
@@ -82,7 +82,7 @@ iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside
 ## 外部配信の状況と未解決事項
 
 - **アカウントとID:** App Store Connectの「国あんき」レコード (ID `6835406487`、Bundle ID `dev.kunianki.app`) はTeam `673KN54RQ5` に作成済みです。Google Play Consoleの利用権限・所有者とAndroidパッケージ名は別途確認が必要です。
-- **iOS配信:** バージョン0.1.0 (2) は内部TestFlightで `IN_BETA_TESTING` です。内部グループのテスターは所有者1名のみで招待済みです。公開App Storeへのリリースと実機確認は未実施です。
+- **iOS配信:** バージョン0.1.0 (3) は内部TestFlightで `IN_BETA_TESTING` です。内部グループのテスターは所有者1名のみで招待済みです。公開App Storeへのリリースと実機確認は未実施です。
 - **Android署名:** アップロードキーストアはありません。所有者が鍵を新規作成するか既存鍵を使うか、保管責任者と復旧手順を決めた後に安全な署名環境を用意してください。Play App Signingのアプリ署名鍵とアップロード鍵は別の役割です。
 - **連絡先とポリシーURL:** Google Playの連絡先メールは必須です。実際に管理するアカウント所有者が有効な宛先を指定してください。ポリシーURLは `main` ブランチの公開ページを使い、提出前にログインなしで閲覧できることを確認してください。
 
