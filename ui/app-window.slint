@@ -26,6 +26,31 @@ export global AtlasColors {
     out property <color> incorrect: #f8ded8;
 }
 
+component PrivateFlagImage inherits Rectangle {
+    in property <image> source;
+
+    background: transparent;
+
+    if root.source.width > 0 && root.source.height > 0: Rectangle {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        width: min(root.width, root.height * (root.source.width / root.source.height));
+        height: min(root.height, root.width * (root.source.height / root.source.width));
+        border-width: 1px;
+        border-color: AtlasColors.line;
+        background: AtlasColors.canvas;
+
+        Image {
+            source: root.source;
+            x: 1px;
+            y: 1px;
+            width: max(parent.width - 2px, 0px);
+            height: max(parent.height - 2px, 0px);
+            image-fit: contain;
+        }
+    }
+}
+
 component ActionButton inherits Rectangle {
     in property <string> label;
     in property <string> accessible-name: root.label;
@@ -453,11 +478,10 @@ component MissedRow inherits Rectangle {
         padding: 10px;
         spacing: 12px;
 
-        Image {
+        PrivateFlagImage {
             source: root.item.flag;
             width: 48px;
             height: 34px;
-            image-fit: contain;
         }
 
         VerticalLayout {
@@ -1197,11 +1221,10 @@ export component AppWindow inherits Window {
                     width: 100%;
                     height: 100%;
                 }
-                Image {
+                PrivateFlagImage {
                     source: root.question-image;
                     width: 100%;
                     height: 100%;
-                    image-fit: contain;
                 }
             }
 
