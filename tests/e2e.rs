@@ -7,7 +7,7 @@ use std::{
 };
 
 use i_slint_backend_testing::{AccessibleRole, ElementHandle, ElementRoot};
-use kunianki::{AppConfig, AppWindow, build_app, data};
+use kunianki::{AppConfig, AppWindow, build_app, data, progress, quiz};
 use slint::{ComponentHandle, Model};
 
 const TEST_SEED: u64 = 0x4b55_4e49;
@@ -99,6 +99,33 @@ fn start_round(app: &AppWindow, mode: &str, region: &str) -> Result<(), Box<dyn 
     invoke(app, "10問を始める")?;
     assert_eq!(app.get_screen().as_str(), "quiz");
     Ok(())
+}
+
+fn first_trivia_answer_index() -> Result<usize, Box<dyn Error>> {
+    let countries = data::load_countries()?;
+    let mut rng = fastrand::Rng::with_seed(TEST_SEED);
+    let first_question = quiz::generate_round(
+        &countries,
+        quiz::Mode::Trivia,
+        quiz::RegionFilter::All,
+        &mut rng,
+        10,
+    )
+    .into_iter()
+    .next()
+    .ok_or_else(|| io::Error::other("seeded trivia round has no questions"))?;
+    Ok(first_question.answer)
+}
+
+fn first_review_answer_index(progress_data: &TestProgress) -> Result<usize, Box<dyn Error>> {
+    let countries = data::load_countries()?;
+    let progress = progress::Progress::load(&progress_data.file);
+    let mut rng = fastrand::Rng::with_seed(TEST_SEED);
+    let first_question = quiz::generate_review(&countries, &progress, &mut rng, 10)
+        .into_iter()
+        .next()
+        .ok_or_else(|| io::Error::other("seeded review round has no questions"))?;
+    Ok(first_question.answer)
 }
 
 fn answer_question(
@@ -446,5 +473,160 @@ fn about_pages_show_privacy_and_license_notices() -> Result<(), Box<dyn Error>> 
 
     invoke(&app, "戻る")?;
     assert_eq!(app.get_screen().as_str(), "about");
+    Ok(())
+}
+
+#[test]
+fn quit_confirmation_cancel_preserves_quiz_state_and_guards_actions() -> Result<(), Box<dyn Error>>
+{
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "3ヒント", "全地域")?;
+    invoke(&app, "次のヒントを見る")?;
+
+    let question_number = app.get_question_number();
+    let hints = app.get_hints().row_count();
+    let score = app.get_score();
+    let review_count = app.get_review_count();
+    assert_eq!(hints, 2);
+    assert!(!app.get_answered());
+
+    invoke(&app, "クイズを中断")?;
+    assert!(app.get_quit_confirmation_open());
+    let first_choice = app.get_choices().row_data(0).ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidData, "choice index is out of range")
+    })?;
+    let first_tile_label = format!("選択肢 1: {first_choice}");
+    let first_tile = accessible_button(&app, &first_tile_label)?;
+    assert_eq!(first_tile.accessible_enabled(), Some(false));
+    first_tile.invoke_accessible_default_action();
+    assert!(!app.get_answered());
+    app.invoke_answer(0);
+    app.invoke_reveal_hint();
+    app.invoke_next_question();
+    assert_eq!(app.get_question_number(), question_number);
+    assert_eq!(app.get_hints().row_count(), hints);
+    assert!(!app.get_answered());
+    assert_eq!(app.get_score(), score);
+    assert_eq!(app.get_review_count(), review_count);
+
+    invoke(&app, "続ける")?;
+    assert!(!app.get_quit_confirmation_open());
+    let first_tile_after_cancel = accessible_button(&app, &first_tile_label)?;
+    assert_eq!(first_tile_after_cancel.accessible_enabled(), Some(true));
+    assert_eq!(app.get_question_number(), question_number);
+    assert_eq!(app.get_hints().row_count(), hints);
+    assert!(!app.get_answered());
+    assert_eq!(app.get_score(), score);
+
+    let choice_count = app.get_choices().row_count();
+    let correct_index = first_trivia_answer_index()?;
+    let wrong_index = (correct_index + 1) % choice_count;
+    let (correct, _, _) = answer_question(&app, wrong_index)?;
+    assert!(!correct);
+    let selected_index = app.get_selected_index();
+    let answered_score = app.get_score();
+    let answered_review_count = app.get_review_count();
+    let answered_hints = app.get_hints().row_count();
+
+    invoke(&app, "クイズを中断")?;
+    app.invoke_answer(i32::try_from(correct_index)?);
+    app.invoke_reveal_hint();
+    app.invoke_next_question();
+    assert_eq!(app.get_question_number(), question_number);
+    assert_eq!(app.get_hints().row_count(), answered_hints);
+    assert!(app.get_answered());
+    assert_eq!(app.get_selected_index(), selected_index);
+    assert_eq!(app.get_score(), answered_score);
+    assert_eq!(app.get_review_count(), answered_review_count);
+
+    invoke(&app, "続ける")?;
+    assert_eq!(app.get_question_number(), question_number);
+    assert_eq!(app.get_hints().row_count(), answered_hints);
+    assert!(app.get_answered());
+    assert_eq!(app.get_selected_index(), selected_index);
+    assert_eq!(app.get_score(), answered_score);
+    assert_eq!(app.get_review_count(), answered_review_count);
+    Ok(())
+}
+
+#[test]
+fn confirmed_quit_keeps_progress_and_stale_callbacks_cannot_open_results()
+-> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "3ヒント", "全地域")?;
+    invoke(&app, "次のヒントを見る")?;
+    let first_correct = first_trivia_answer_index()?;
+    let first_wrong = (first_correct + 1) % app.get_choices().row_count();
+    let (correct, _, _) = answer_question(&app, first_wrong)?;
+    assert!(!correct);
+    assert_eq!(app.get_review_count(), 1);
+
+    invoke(&app, "次の問題へ")?;
+    invoke(&app, "次のヒントを見る")?;
+    assert_eq!(app.get_question_number(), 2);
+    assert_eq!(app.get_hints().row_count(), 2);
+    assert!(!app.get_answered());
+    invoke(&app, "クイズを中断")?;
+    invoke(&app, "ホームへ戻る")?;
+    assert_eq!(app.get_screen().as_str(), "home");
+    assert!(!app.get_quit_confirmation_open());
+    assert_eq!(app.get_review_count(), 1);
+
+    app.invoke_answer(0);
+    app.invoke_reveal_hint();
+    app.invoke_next_question();
+    assert_eq!(app.get_screen().as_str(), "home");
+    assert_eq!(app.get_review_count(), 1);
+    let saved_app = test_app(&progress)?;
+    assert_eq!(saved_app.get_review_count(), 1);
+
+    invoke(
+        &saved_app,
+        &format!("まちがえた国を復習、{}問", saved_app.get_review_count()),
+    )?;
+    assert_eq!(saved_app.get_screen().as_str(), "quiz");
+    assert_eq!(saved_app.get_kind().as_str(), "trivia");
+    invoke(&saved_app, "次のヒントを見る")?;
+    let review_question_number = saved_app.get_question_number();
+    let review_hints = saved_app.get_hints().row_count();
+    let review_score = saved_app.get_score();
+    invoke(&saved_app, "クイズを中断")?;
+    saved_app.invoke_answer(0);
+    saved_app.invoke_next_question();
+    assert_eq!(saved_app.get_question_number(), review_question_number);
+    assert_eq!(saved_app.get_hints().row_count(), review_hints);
+    assert!(!saved_app.get_answered());
+    invoke(&saved_app, "続ける")?;
+    assert_eq!(saved_app.get_question_number(), review_question_number);
+    assert_eq!(saved_app.get_hints().row_count(), review_hints);
+    assert_eq!(saved_app.get_score(), review_score);
+
+    let correct_index = first_review_answer_index(&progress)?;
+    let (correct, _, _) = answer_question(&saved_app, correct_index)?;
+    assert!(correct);
+    let review_count_after_answer = saved_app.get_review_count();
+    assert_eq!(review_count_after_answer, 0);
+    invoke(&saved_app, "クイズを中断")?;
+    invoke(&saved_app, "ホームへ戻る")?;
+    assert_eq!(saved_app.get_screen().as_str(), "home");
+    assert_eq!(saved_app.get_review_count(), review_count_after_answer);
+    saved_app.invoke_answer(0);
+    saved_app.invoke_reveal_hint();
+    saved_app.invoke_next_question();
+    assert_eq!(saved_app.get_screen().as_str(), "home");
+
+    let reloaded_app = test_app(&progress)?;
+    assert_eq!(reloaded_app.get_review_count(), review_count_after_answer);
+    start_round(&saved_app, "3ヒント", "全地域")?;
+    assert_eq!(saved_app.get_screen().as_str(), "quiz");
+    assert!(!saved_app.get_quit_confirmation_open());
+    assert_eq!(saved_app.get_question_number(), 1);
+    assert_eq!(saved_app.get_score(), 0);
+    assert!(!saved_app.get_answered());
+    assert_eq!(saved_app.get_hints().row_count(), 1);
     Ok(())
 }
