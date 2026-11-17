@@ -131,6 +131,7 @@ component AnswerTile inherits Rectangle {
     in property <int> correct-index: -1;
     in property <bool> answered: false;
     in property <bool> enabled: true;
+    in property <length> tile-height: 52px;
     callback tapped(int);
 
     accessible-role: button;
@@ -144,7 +145,7 @@ component AnswerTile inherits Rectangle {
             root.tapped(root.choice-index);
         }
     }
-    height: 52px;
+    height: root.tile-height;
     border-radius: 14px;
     border-width: 1px;
     border-color: root.answered && root.choice-index == root.correct-index ? #72ae8b
@@ -161,6 +162,7 @@ component AnswerTile inherits Rectangle {
         font-weight: 600;
         horizontal-alignment: center;
         vertical-alignment: center;
+        wrap: word-wrap;
         width: 100%;
         height: 100%;
     }
@@ -171,6 +173,265 @@ component AnswerTile inherits Rectangle {
                 root.tapped(root.choice-index);
             }
         }
+    }
+}
+
+component QuizAnswerChoices inherits Rectangle {
+    in property <[string]> choices;
+    in property <int> selected-index: -1;
+    in property <int> correct-index: -1;
+    in property <bool> answered: false;
+    in property <bool> enabled: true;
+    in property <length> tile-height: 52px;
+    callback answer(int);
+
+    height: root.choices.length * root.tile-height
+        + max(root.choices.length - 1, 0) * 8px;
+
+    VerticalLayout {
+        spacing: 8px;
+        for choice[index] in root.choices: AnswerTile {
+            label: choice;
+            choice-index: index;
+            selected-index: root.selected-index;
+            correct-index: root.correct-index;
+            answered: root.answered;
+            enabled: root.enabled;
+            tile-height: root.tile-height;
+            tapped(index) => { root.answer(index); }
+        }
+    }
+}
+
+component MapControlButton inherits Rectangle {
+    in property <string> label;
+    in property <string> glyph;
+    in property <bool> enabled: true;
+    callback tapped();
+
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-action-default => {
+        if (root.enabled) {
+            root.tapped();
+        }
+    }
+    width: 48px;
+    height: 44px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: AtlasColors.line;
+    background: root.enabled ? AtlasColors.paper : #edf3f1;
+
+    Text {
+        text: root.glyph;
+        color: root.enabled ? AtlasColors.ink : AtlasColors.muted;
+        font-size: root.glyph == "戻す" ? 12px : 22px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    TouchArea {
+        clicked => {
+            if (root.enabled) {
+                root.tapped();
+            }
+        }
+    }
+}
+
+component MapViewer inherits Rectangle {
+    in property <image> map-image;
+    in property <int> question-number;
+    in property <bool> enabled: true;
+
+    private property <int> zoom-percent: 100;
+    private property <length> map-size:
+        min(root.width, max(root.height - 52px, 0px));
+    private property <length> previous-map-size;
+    private property <int> max-zoom-percent:
+        root.map-size * 300 / 100 <= 1600px ? 300
+        : root.map-size * 250 / 100 <= 1600px ? 250
+        : root.map-size * 200 / 100 <= 1600px ? 200
+        : root.map-size * 150 / 100 <= 1600px ? 150
+        : 100;
+
+    init => {
+        root.previous-map-size = root.map-size;
+    }
+
+    function zoom-to(next: int) {
+        let target = min(max(next, 100), root.max-zoom-percent);
+        map-flickable.content-x = (map-flickable.content-x - map-flickable.width / 2)
+            * target / root.zoom-percent + map-flickable.width / 2;
+        map-flickable.content-y = (map-flickable.content-y - map-flickable.height / 2)
+            * target / root.zoom-percent + map-flickable.height / 2;
+        root.zoom-percent = target;
+    }
+
+    border-radius: 20px;
+    min-width: 0px;
+    min-height: 0px;
+    background: AtlasColors.paper;
+    clip: true;
+
+    map-flickable := Flickable {
+        x: (root.width - root.map-size) / 2;
+        y: 52px + (root.height - 52px - root.map-size) / 2;
+        width: root.map-size;
+        height: root.map-size;
+        content-width: map-flickable.width * root.zoom-percent / 100;
+        content-height: map-flickable.height * root.zoom-percent / 100;
+        interactive: root.enabled;
+        mouse-drag-pan-enabled: root.enabled;
+        accessible-role: image;
+        accessible-label: "地図の表示領域";
+        accessible-description: "倍率 \{root.zoom-percent}％。地図をドラッグして移動できます。";
+
+        if root.map-image.width == 0: Text {
+            text: "地図を読み込みます";
+            color: AtlasColors.muted;
+            font-size: 13px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        map-image-element := Image {
+            x: 0px;
+            y: 0px;
+            source: root.map-image;
+            width: map-flickable.content-width;
+            height: map-flickable.content-height;
+            image-fit: contain;
+        }
+    }
+
+    HorizontalLayout {
+        x: root.width - 160px;
+        y: 4px;
+        width: 152px;
+        height: 44px;
+        spacing: 4px;
+
+        MapControlButton {
+            label: "地図を拡大";
+            glyph: "＋";
+            enabled: root.enabled && root.zoom-percent < root.max-zoom-percent;
+            tapped => { root.zoom-to(root.zoom-percent + 50); }
+        }
+
+        MapControlButton {
+            label: "地図を縮小";
+            glyph: "−";
+            enabled: root.enabled && root.zoom-percent > 100;
+            tapped => { root.zoom-to(root.zoom-percent - 50); }
+        }
+
+        MapControlButton {
+            label: "地図をリセット";
+            glyph: "戻す";
+            enabled: root.enabled && (root.zoom-percent != 100
+                || map-flickable.content-x != 0px
+                || map-flickable.content-y != 0px);
+            tapped => {
+                root.zoom-percent = 100;
+                map-flickable.content-x = 0px;
+                map-flickable.content-y = 0px;
+            }
+        }
+    }
+
+    changed map-size => {
+        let target = min(root.zoom-percent, root.max-zoom-percent);
+        if (root.previous-map-size > 0px) {
+            let scale = root.map-size / root.previous-map-size * target / root.zoom-percent;
+            map-flickable.content-x = (map-flickable.content-x - root.previous-map-size / 2)
+                * scale + root.map-size / 2;
+            map-flickable.content-y = (map-flickable.content-y - root.previous-map-size / 2)
+                * scale + root.map-size / 2;
+        } else {
+            map-flickable.content-x = 0px;
+            map-flickable.content-y = 0px;
+        }
+        root.zoom-percent = target;
+        root.previous-map-size = root.map-size;
+    }
+
+    changed question-number => {
+        root.zoom-percent = 100;
+        map-flickable.content-x = 0px;
+        map-flickable.content-y = 0px;
+    }
+}
+
+component MapQuizBody inherits Rectangle {
+    in property <image> map-image;
+    in property <int> question-number;
+    in property <[string]> choices;
+    in property <int> selected-index: -1;
+    in property <int> correct-index: -1;
+    in property <bool> answered: false;
+    in property <bool> enabled: true;
+    in property <bool> wide-layout: false;
+    callback answer(int);
+    callback next-question();
+
+    private property <length> choice-height:
+        root.choices.length * 48px + max(root.choices.length - 1, 0) * 8px;
+    private property <length> map-width: root.wide-layout
+        ? max(root.width - 312px, 0px)
+        : root.width;
+    private property <length> map-height: root.wide-layout
+        ? root.height
+        : max(root.height - root.choice-height - 14px - 58px, 0px);
+    private property <length> choices-x: root.wide-layout ? root.width - 300px : 0px;
+    private property <length> choices-y: root.wide-layout ? 0px : root.map-height + 14px;
+    private property <length> next-y: root.wide-layout
+        ? root.choice-height + 12px
+        : root.choices-y + root.choice-height;
+
+    min-width: 0px;
+    min-height: 0px;
+    clip: true;
+
+    MapViewer {
+        x: 0px;
+        y: 0px;
+        width: root.map-width;
+        height: root.map-height;
+        map-image: root.map-image;
+        question-number: root.question-number;
+        enabled: root.enabled;
+    }
+
+    QuizAnswerChoices {
+        x: root.choices-x;
+        y: root.choices-y;
+        width: root.wide-layout ? 300px : root.width;
+        height: root.choice-height;
+        choices: root.choices;
+        selected-index: root.selected-index;
+        correct-index: root.correct-index;
+        answered: root.answered;
+        enabled: root.enabled;
+        tile-height: 48px;
+        answer(index) => { root.answer(index); }
+    }
+
+    if root.answered: ActionButton {
+        x: root.wide-layout ? root.width - 300px : 0px;
+        y: root.next-y;
+        width: root.wide-layout ? 300px : root.width;
+        height: 58px;
+        label: "次の問題へ";
+        enabled: root.enabled;
+        tapped => { root.next-question(); }
     }
 }
 
@@ -244,6 +505,10 @@ export component AppWindow inherits Window {
 
     private property <int> chosen-mode: 0;
     private property <int> chosen-region: 0;
+    private property <bool> wide-map-layout:
+        root.width - root.safe-area-insets.left - root.safe-area-insets.right >= 760px
+        && root.width - root.safe-area-insets.left - root.safe-area-insets.right
+        > root.height - root.safe-area-insets.top - root.safe-area-insets.bottom;
 
     preferred-width: 390px;
     preferred-height: 844px;
@@ -684,7 +949,7 @@ export component AppWindow inherits Window {
         }
 
         if root.screen == "quiz": VerticalLayout {
-            padding: 20px;
+            padding: root.kind == "map" ? 12px : 20px;
             spacing: 0px;
 
             HorizontalLayout {
@@ -742,7 +1007,7 @@ export component AppWindow inherits Window {
             }
 
             Rectangle {
-                height: 8px;
+                height: root.kind == "map" ? 4px : 8px;
                 background: transparent;
             }
 
@@ -761,7 +1026,7 @@ export component AppWindow inherits Window {
             }
 
             Rectangle {
-                height: 20px;
+                height: root.kind == "map" ? 8px : 20px;
                 background: transparent;
             }
 
@@ -773,7 +1038,7 @@ export component AppWindow inherits Window {
             }
 
             Rectangle {
-                height: 12px;
+                height: root.kind == "map" ? 8px : 12px;
                 background: transparent;
             }
 
@@ -826,12 +1091,12 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.kind != "trivia": Rectangle {
+            if root.kind == "flag": Rectangle {
                 height: 178px;
                 border-radius: 20px;
                 background: AtlasColors.paper;
                 if root.question-image.width == 0: Text {
-                    text: root.kind == "map" ? "地図を読み込みます" : "国旗を読み込みます";
+                    text: "国旗を読み込みます";
                     color: AtlasColors.muted;
                     font-size: 13px;
                     horizontal-alignment: center;
@@ -847,11 +1112,24 @@ export component AppWindow inherits Window {
                 }
             }
 
-            Rectangle {
+            if root.kind == "map": MapQuizBody {
+                map-image: root.question-image;
+                question-number: root.question-number;
+                choices: root.choices;
+                selected-index: root.selected-index;
+                correct-index: root.correct-index;
+                answered: root.answered;
+                enabled: !root.quit-confirmation-open;
+                wide-layout: root.wide-map-layout;
+                vertical-stretch: 1;
+                answer(index) => { root.answer(index); }
+                next-question => { root.next-question(); }
+            }
+
+            if root.kind != "map": Rectangle {
                 height: 14px;
                 background: transparent;
             }
-
             if root.kind == "trivia" && !root.answered: ActionButton {
                 accessible-name: "次のヒントを見る";
                 label: root.can-reveal-hint ? "次のヒントを見る" : "ヒントをすべて表示済み";
@@ -865,26 +1143,22 @@ export component AppWindow inherits Window {
                 background: transparent;
             }
 
-            VerticalLayout {
-                spacing: 8px;
-                for choice[index] in root.choices: AnswerTile {
-                    label: choice;
-                    choice-index: index;
-                    selected-index: root.selected-index;
-                    correct-index: root.correct-index;
-                    answered: root.answered;
-                    enabled: !root.quit-confirmation-open;
-                    tapped(index) => { root.answer(index); }
-                }
+            if root.kind != "map": QuizAnswerChoices {
+                choices: root.choices;
+                selected-index: root.selected-index;
+                correct-index: root.correct-index;
+                answered: root.answered;
+                enabled: !root.quit-confirmation-open;
+                answer(index) => { root.answer(index); }
             }
 
-            Rectangle {
+            if root.kind != "map": Rectangle {
                 min-height: root.kind == "trivia" ? 16px : 0px;
                 vertical-stretch: root.kind == "trivia" ? 0 : 1;
                 background: transparent;
             }
 
-            if root.answered: ActionButton {
+            if root.kind != "map" && root.answered: ActionButton {
                 label: "次の問題へ";
                 enabled: !root.quit-confirmation-open;
                 tapped => { root.next-question(); }

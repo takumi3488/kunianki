@@ -4,11 +4,12 @@ use std::{
     fs, io,
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
 };
 
 use i_slint_backend_testing::{AccessibleRole, ElementHandle, ElementRoot};
 use kunianki::{AppConfig, AppWindow, build_app, data, progress, quiz};
-use slint::{ComponentHandle, Model};
+use slint::{ComponentHandle, LogicalPosition, Model};
 
 const TEST_SEED: u64 = 0x4b55_4e49;
 static NEXT_TEMP_DIRECTORY: AtomicUsize = AtomicUsize::new(0);
@@ -37,8 +38,8 @@ impl TestProgress {
         }
     }
 
-    fn config(&self) -> AppConfig {
-        AppConfig::new(self.file.clone()).with_rng_seed(TEST_SEED)
+    fn config(&self, seed: u64) -> AppConfig {
+        AppConfig::new(self.file.clone()).with_rng_seed(seed)
     }
 }
 
@@ -81,8 +82,109 @@ fn accessible_button(app: &AppWindow, label: &str) -> Result<ElementHandle, Box<
     Ok(button)
 }
 
+fn element_by_id(app: &AppWindow, id: &str) -> Result<ElementHandle, Box<dyn Error>> {
+    let mut matches = ElementHandle::find_by_element_id(app, id);
+    let element = matches.next().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::NotFound,
+            format!("no element with id {id:?}"),
+        )
+    })?;
+    if matches.next().is_some() {
+        return Err(io::Error::other(format!("multiple elements with id {id:?}")).into());
+    }
+    Ok(element)
+}
+
+fn map_display(app: &AppWindow) -> Result<ElementHandle, Box<dyn Error>> {
+    let mut matches = ElementHandle::find_by_accessible_label(app, "地図の表示領域");
+    let display = matches
+        .next()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "map display is not accessible"))?;
+    if matches.next().is_some() {
+        return Err(io::Error::other("multiple map displays are visible").into());
+    }
+    Ok(display)
+}
+
+fn tap(app: &AppWindow, label: &str) -> Result<(), Box<dyn Error>> {
+    accessible_button(app, label)?.mock_single_click(slint::platform::PointerEventButton::Left);
+    Ok(())
+}
+
+fn settle() {
+    i_slint_backend_testing::mock_elapsed_time(Duration::from_millis(16));
+}
+
+fn assert_inside_window(element: &ElementHandle, width: f32, height: f32) {
+    let position = element.absolute_position();
+    let size = element.size();
+    assert!(
+        position.x >= -0.5
+            && position.y >= -0.5
+            && position.x + size.width <= width + 0.5
+            && position.y + size.height <= height + 0.5,
+        "element {:?} at ({}, {}) size ({}, {}) is outside {width}x{height}",
+        element.accessible_label(),
+        position.x,
+        position.y,
+        size.width,
+        size.height
+    );
+}
+
+fn assert_map_toolbar_outside_viewport(app: &AppWindow) -> Result<(), Box<dyn Error>> {
+    let viewport = element_by_id(app, "MapViewer::map-flickable")?;
+    let viewport_position = viewport.absolute_position();
+    let viewport_size = viewport.size();
+    for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+        let control = accessible_button(app, label)?;
+        let position = control.absolute_position();
+        let size = control.size();
+        assert!(
+            position.x + size.width <= viewport_position.x
+                || viewport_position.x + viewport_size.width <= position.x
+                || position.y + size.height <= viewport_position.y
+                || viewport_position.y + viewport_size.height <= position.y,
+            "{label} overlaps the map viewport"
+        );
+    }
+    Ok(())
+}
+
+fn assert_image_centered_in_viewport(viewport: &ElementHandle, image: &ElementHandle) {
+    let viewport_position = viewport.absolute_position();
+    let viewport_size = viewport.size();
+    let image_position = image.absolute_position();
+    let image_size = image.size();
+    assert!(
+        (image_position.x + image_size.width / 2.0
+            - viewport_position.x
+            - viewport_size.width / 2.0)
+            .abs()
+            < 1.0,
+        "the map's center target should remain horizontally visible (viewport x={}, width={}, image x={}, width={})",
+        viewport_position.x,
+        viewport_size.width,
+        image_position.x,
+        image_size.width
+    );
+    assert!(
+        (image_position.y + image_size.height / 2.0
+            - viewport_position.y
+            - viewport_size.height / 2.0)
+            .abs()
+            < 1.0,
+        "the map's center target should remain vertically visible"
+    );
+}
+
 fn test_app(progress: &TestProgress) -> Result<AppWindow, Box<dyn Error>> {
-    let app = build_app(progress.config())?;
+    test_app_with_seed(progress, TEST_SEED)
+}
+
+fn test_app_with_seed(progress: &TestProgress, seed: u64) -> Result<AppWindow, Box<dyn Error>> {
+    let app = build_app(progress.config(seed))?;
     app.window().set_size(slint::PhysicalSize::new(390, 844));
     Ok(app)
 }
@@ -294,6 +396,526 @@ fn flag_and_map_questions_load_nonempty_images() -> Result<(), Box<dyn Error>> {
     assert!(
         flag_size.width > 0 && flag_size.height > 0,
         "flag image should be nonempty"
+    );
+    Ok(())
+}
+
+#[test]
+fn map_viewport_adapts_to_tablet_and_phone() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    app.window().set_size(slint::PhysicalSize::new(1376, 1032));
+    start_round(&app, "地図", "全地域")?;
+
+    let display = map_display(&app)?;
+    assert_eq!(display.accessible_role(), Some(AccessibleRole::Image));
+    let flickable = element_by_id(&app, "MapViewer::map-flickable")?;
+    assert!(flickable.size().width > 700.0);
+    for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+        assert_inside_window(&accessible_button(&app, label)?, 1376.0, 1032.0);
+    }
+    assert_map_toolbar_outside_viewport(&app)?;
+
+    app.window().set_size(slint::PhysicalSize::new(1032, 1376));
+    settle();
+    assert!(flickable.size().width > 900.0);
+    assert_map_toolbar_outside_viewport(&app)?;
+    for index in 0..app.get_choices().row_count() {
+        let choice = app
+            .get_choices()
+            .row_data(index)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing map choice"))?;
+        assert_inside_window(
+            &accessible_button(&app, &format!("選択肢 {}: {choice}", index + 1))?,
+            1032.0,
+            1376.0,
+        );
+    }
+
+    app.window().set_size(slint::PhysicalSize::new(320, 700));
+    settle();
+    assert!(flickable.size().width < 400.0);
+    assert!(
+        flickable.size().width > 200.0,
+        "phone map should remain substantial"
+    );
+    assert_inside_window(&map_display(&app)?, 320.0, 700.0);
+    assert_inside_window(&accessible_button(&app, "地図を拡大")?, 320.0, 700.0);
+    assert_map_toolbar_outside_viewport(&app)?;
+    Ok(())
+}
+
+#[test]
+fn map_zoom_pan_and_reset_clamp_to_map_bounds() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    app.window().set_size(slint::PhysicalSize::new(320, 700));
+    start_round(&app, "地図", "全地域")?;
+
+    let display = map_display(&app)?;
+    let flickable = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+        assert_inside_window(&accessible_button(&app, label)?, 320.0, 700.0);
+    }
+    assert_map_toolbar_outside_viewport(&app)?;
+
+    for _ in 0..5 {
+        tap(&app, "地図を拡大")?;
+    }
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 300％")),
+        "map zoom should stop at 300 percent when the raster budget allows"
+    );
+    tap(&app, "地図を拡大")?;
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 300％")),
+        "zoom-in should be disabled at the maximum scale"
+    );
+
+    let viewport_position = flickable.absolute_position();
+    let viewport_size = flickable.size();
+    let image_size = image.size();
+    assert!((image_size.width - viewport_size.width * 3.0).abs() < 1.0);
+    assert!((image_size.height - viewport_size.height * 3.0).abs() < 1.0);
+    assert_image_centered_in_viewport(&flickable, &image);
+    flickable.mock_drag(
+        LogicalPosition::new(
+            viewport_position.x + viewport_size.width / 2.0 - viewport_size.width * 3.0,
+            viewport_position.y + viewport_size.height / 2.0 - viewport_size.height * 3.0,
+        ),
+        slint::platform::PointerEventButton::Left,
+    );
+    let panned_position = image.absolute_position();
+    assert!(
+        (panned_position.x - (viewport_position.x + viewport_size.width - image_size.width)).abs()
+            < 1.0
+    );
+    assert!(
+        (panned_position.y - (viewport_position.y + viewport_size.height - image_size.height))
+            .abs()
+            < 1.0
+    );
+
+    tap(&app, "地図を縮小")?;
+    settle();
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 250％")),
+        "zooming out should reduce the scale"
+    );
+    let reduced_size = image.size();
+    let reduced_position = image.absolute_position();
+    assert!((reduced_size.width - viewport_size.width * 2.5).abs() < 1.0);
+    assert!((reduced_size.height - viewport_size.height * 2.5).abs() < 1.0);
+    assert!(
+        (reduced_position.x - (viewport_position.x + viewport_size.width - reduced_size.width))
+            .abs()
+            < 1.0
+    );
+    assert!(
+        (reduced_position.y - (viewport_position.y + viewport_size.height - reduced_size.height))
+            .abs()
+            < 1.0
+    );
+
+    tap(&app, "地図をリセット")?;
+    settle();
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "reset should restore the original map scale"
+    );
+    let reset_position = image.absolute_position();
+    assert!((reset_position.x - viewport_position.x).abs() < 1.0);
+    assert!((reset_position.y - viewport_position.y).abs() < 1.0);
+    assert!((image.size().width - viewport_size.width).abs() < 1.0);
+    assert!((image.size().height - viewport_size.height).abs() < 1.0);
+    tap(&app, "地図を縮小")?;
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "zoom-out should be disabled at the minimum scale"
+    );
+    Ok(())
+}
+
+#[test]
+fn map_answer_preserves_view_until_next_question() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    app.window().set_size(slint::PhysicalSize::new(320, 700));
+    start_round(&app, "地図", "全地域")?;
+
+    let display = map_display(&app)?;
+    let flickable = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    tap(&app, "地図を拡大")?;
+    let viewport_position_before_answer = flickable.absolute_position();
+    let viewport_size_before_answer = flickable.size();
+    let image_position_before_answer = image.absolute_position();
+    let image_size_before_answer = image.size();
+    answer_question(&app, 0)?;
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 150％")),
+        "answer image refresh must preserve the current map view"
+    );
+    assert!(
+        (flickable.absolute_position().x - viewport_position_before_answer.x).abs() < 1.0
+            && (flickable.absolute_position().y - viewport_position_before_answer.y).abs() < 1.0
+            && (flickable.size().width - viewport_size_before_answer.width).abs() < 1.0
+            && (flickable.size().height - viewport_size_before_answer.height).abs() < 1.0
+            && (image.absolute_position().x - image_position_before_answer.x).abs() < 1.0
+            && (image.absolute_position().y - image_position_before_answer.y).abs() < 1.0
+            && (image.size().width - image_size_before_answer.width).abs() < 1.0
+            && (image.size().height - image_size_before_answer.height).abs() < 1.0,
+        "answering should preserve the map viewport and focal point"
+    );
+    assert_map_toolbar_outside_viewport(&app)?;
+    let next = accessible_button(&app, "次の問題へ")?;
+    assert_inside_window(&next, 320.0, 700.0);
+    let question_number = app.get_question_number();
+    next.mock_single_click(slint::platform::PointerEventButton::Left);
+    settle();
+    assert_eq!(app.get_question_number(), question_number + 1);
+    assert!(
+        display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "a new map question should start at the default view"
+    );
+    Ok(())
+}
+
+#[test]
+fn map_zoom_respects_raster_budget_when_layout_grows() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    app.window().set_size(slint::PhysicalSize::new(1376, 800));
+    start_round(&app, "地図", "全地域")?;
+
+    let display = map_display(&app)?;
+    let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    assert_map_toolbar_outside_viewport(&app)?;
+    let initial_viewport_width = viewport.size().width;
+    for _ in 0..5 {
+        tap(&app, "地図を拡大")?;
+    }
+    let zoomed_size = image.size();
+    let zoomed_description = display.accessible_description().unwrap_or_default();
+    assert!(
+        zoomed_size.width <= 1600.0 && zoomed_size.height <= 1600.0,
+        "the maximum zoom should keep the rendered map within 1600 logical pixels"
+    );
+    assert!(
+        !zoomed_description.contains("倍率 300％"),
+        "a large map should stop below 300 percent"
+    );
+    assert_image_centered_in_viewport(&viewport, &image);
+
+    app.window().set_size(slint::PhysicalSize::new(1032, 1376));
+    settle();
+    assert!(
+        viewport.size().width > initial_viewport_width,
+        "the portrait layout should provide a larger map base size"
+    );
+    let clamped_description = display.accessible_description().unwrap_or_default();
+    assert_ne!(
+        clamped_description, zoomed_description,
+        "growing the map base should lower the current zoom"
+    );
+    assert!(
+        image.size().width <= 1600.0 && image.size().height <= 1600.0,
+        "resizing should keep the rendered map within 1600 logical pixels"
+    );
+    assert_image_centered_in_viewport(&viewport, &image);
+    let clamped_size = image.size();
+    tap(&app, "地図を拡大")?;
+    assert!(
+        image.size().width <= 1600.0 && image.size().height <= 1600.0,
+        "zooming after resize must respect the new map-size limit"
+    );
+    assert!(
+        (image.size().width - clamped_size.width).abs() < 1.0,
+        "zoom-in must remain disabled at the resized map limit"
+    );
+    assert_map_toolbar_outside_viewport(&app)?;
+    Ok(())
+}
+
+#[test]
+fn map_long_choices_use_full_width_single_column_tiles() -> Result<(), Box<dyn Error>> {
+    const LONG_LABEL: &str = "セントビンセント及びグレナディーン諸島";
+    i_slint_backend_testing::init_no_event_loop();
+    let countries = data::load_countries()?;
+    let country_index = countries
+        .iter()
+        .position(|country| country.name_ja == LONG_LABEL)
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "long country label missing"))?;
+    let seed = (0..1024_u64)
+        .find(|seed| {
+            let mut rng = fastrand::Rng::with_seed(*seed);
+            quiz::generate_round(
+                &countries,
+                quiz::Mode::Map,
+                quiz::RegionFilter::All,
+                &mut rng,
+                10,
+            )
+            .first()
+            .is_some_and(|question| question.choices.contains(&country_index))
+        })
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "no seed exposes long map label"))?;
+
+    let progress = TestProgress::new()?;
+    let app = test_app_with_seed(&progress, seed)?;
+    app.window().set_size(slint::PhysicalSize::new(1376, 1032));
+    start_round(&app, "地図", "全地域")?;
+    let choices = app.get_choices();
+    let long_choice_index = (0..choices.row_count())
+        .find(|index| choices.row_data(*index).as_deref() == Some(LONG_LABEL))
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "long label not in map choices"))?;
+    let mut previous_x: Option<f32> = None;
+    let mut previous_bottom: Option<f32> = None;
+    for index in 0..choices.row_count() {
+        let choice = choices
+            .row_data(index)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing map choice"))?;
+        let tile = accessible_button(&app, &format!("選択肢 {}: {choice}", index + 1))?;
+        assert_inside_window(&tile, 1376.0, 1032.0);
+        let position = tile.absolute_position();
+        let size = tile.size();
+        assert!((size.width - 300.0).abs() < 1.0);
+        assert!((size.height - 48.0).abs() < 1.0);
+        if let Some(x) = previous_x {
+            assert!((position.x - x).abs() < 1.0);
+        }
+        if let Some(bottom) = previous_bottom {
+            assert!((position.y - bottom - 8.0).abs() < 1.0);
+        }
+        previous_x = Some(position.x);
+        previous_bottom = Some(position.y + size.height);
+    }
+    let long_tile = accessible_button(
+        &app,
+        &format!("選択肢 {}: {LONG_LABEL}", long_choice_index + 1),
+    )?;
+    let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    let viewport_position_before_answer = viewport.absolute_position();
+    let viewport_size_before_answer = viewport.size();
+    let image_position_before_answer = image.absolute_position();
+    let image_size_before_answer = image.size();
+    assert_map_toolbar_outside_viewport(&app)?;
+    long_tile.mock_single_click(slint::platform::PointerEventButton::Left);
+    assert!(app.get_answered());
+    let next = accessible_button(&app, "次の問題へ")?;
+    assert_inside_window(&next, 1376.0, 1032.0);
+    assert_map_toolbar_outside_viewport(&app)?;
+    assert!(
+        (viewport.size().width - viewport_size_before_answer.width).abs() < 1.0
+            && (viewport.size().height - viewport_size_before_answer.height).abs() < 1.0
+            && (viewport.absolute_position().x - viewport_position_before_answer.x).abs() < 1.0
+            && (viewport.absolute_position().y - viewport_position_before_answer.y).abs() < 1.0
+            && (image.size().width - image_size_before_answer.width).abs() < 1.0
+            && (image.size().height - image_size_before_answer.height).abs() < 1.0
+            && (image.absolute_position().x - image_position_before_answer.x).abs() < 1.0
+            && (image.absolute_position().y - image_position_before_answer.y).abs() < 1.0,
+        "answering a long-label question should preserve the displayed map bounds"
+    );
+    Ok(())
+}
+
+#[test]
+fn map_answer_and_next_are_touchable_on_phone_widths() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "地図", "全地域")?;
+
+    for (width, height) in [(320_u16, 568_u16), (320, 700), (375, 667)] {
+        app.window().set_size(slint::PhysicalSize::new(
+            u32::from(width),
+            u32::from(height),
+        ));
+        settle();
+        let window_width = f32::from(width);
+        let window_height = f32::from(height);
+        let display = map_display(&app)?;
+        assert_inside_window(&display, window_width, window_height);
+        assert!(display.size().width > 0.0 && display.size().height > 0.0);
+        assert_map_toolbar_outside_viewport(&app)?;
+        for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+            assert_inside_window(
+                &accessible_button(&app, label)?,
+                window_width,
+                window_height,
+            );
+        }
+        for index in 0..app.get_choices().row_count() {
+            let choice = app
+                .get_choices()
+                .row_data(index)
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing map choice"))?;
+            assert_inside_window(
+                &accessible_button(&app, &format!("選択肢 {}: {choice}", index + 1))?,
+                window_width,
+                window_height,
+            );
+        }
+
+        tap(&app, "地図を拡大")?;
+        let display = map_display(&app)?;
+        assert!(
+            display
+                .accessible_description()
+                .is_some_and(|description| description.contains("倍率 150％")),
+            "zoom control should update the displayed scale"
+        );
+        let choice = app.get_choices().row_data(0).ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "missing first map choice")
+        })?;
+        let answer_label = format!("選択肢 1: {choice}");
+        let answer = accessible_button(&app, &answer_label)?;
+        assert_inside_window(&answer, window_width, window_height);
+        let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+        let image = element_by_id(&app, "MapViewer::map-image-element")?;
+        let viewport_position_before_answer = viewport.absolute_position();
+        let viewport_size_before_answer = viewport.size();
+        let image_position_before_answer = image.absolute_position();
+        let image_size_before_answer = image.size();
+        assert!(
+            viewport_size_before_answer.width > 100.0,
+            "the smallest phone layout should leave room for the map after controls"
+        );
+        answer.mock_single_click(slint::platform::PointerEventButton::Left);
+        assert!(app.get_answered(), "map answer should respond to a touch");
+        assert!(
+            (viewport.size().width - viewport_size_before_answer.width).abs() < 1.0
+                && (viewport.size().height - viewport_size_before_answer.height).abs() < 1.0
+                && (viewport.absolute_position().x - viewport_position_before_answer.x).abs() < 1.0
+                && (viewport.absolute_position().y - viewport_position_before_answer.y).abs() < 1.0
+                && (image.size().width - image_size_before_answer.width).abs() < 1.0
+                && (image.size().height - image_size_before_answer.height).abs() < 1.0
+                && (image.absolute_position().x - image_position_before_answer.x).abs() < 1.0
+                && (image.absolute_position().y - image_position_before_answer.y).abs() < 1.0,
+            "answering should preserve the map viewport and focal point"
+        );
+        assert_map_toolbar_outside_viewport(&app)?;
+        assert!(
+            display
+                .accessible_description()
+                .is_some_and(|description| description.contains("倍率 150％")),
+            "revealing the answer must preserve the current map view"
+        );
+
+        let next = accessible_button(&app, "次の問題へ")?;
+        assert_inside_window(&next, window_width, window_height);
+        let question_number = app.get_question_number();
+        next.mock_single_click(slint::platform::PointerEventButton::Left);
+        settle();
+        assert_eq!(app.get_question_number(), question_number + 1);
+        assert!(
+            display
+                .accessible_description()
+                .is_some_and(|description| description.contains("倍率 100％")),
+            "next question should reset the map view"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn map_review_round_starts_at_default_zoom() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "地図", "全地域")?;
+    let display = map_display(&app)?;
+    tap(&app, "地図を拡大")?;
+
+    let countries = data::load_countries()?;
+    let mut rng = fastrand::Rng::with_seed(TEST_SEED);
+    let questions = quiz::generate_round(
+        &countries,
+        quiz::Mode::Map,
+        quiz::RegionFilter::All,
+        &mut rng,
+        10,
+    );
+    let question_count = usize::try_from(app.get_total_questions())?;
+    assert_eq!(questions.len(), question_count);
+    for (index, question) in questions.iter().enumerate() {
+        let selected_index = usize::from(question.answer == 0);
+        let (correct, _, _) = answer_question(&app, selected_index)?;
+        assert!(!correct, "map review setup should miss each question");
+        if index == 0 {
+            assert!(
+                display
+                    .accessible_description()
+                    .is_some_and(|description| description.contains("倍率 150％")),
+                "answering must not reset a map view"
+            );
+        }
+        invoke(&app, "次の問題へ")?;
+        settle();
+        if index + 1 < question_count {
+            assert!(
+                display
+                    .accessible_description()
+                    .is_some_and(|description| description.contains("倍率 100％")),
+                "each new map question should reset its view"
+            );
+        }
+    }
+
+    let review_progress = progress::Progress::load(&progress.file);
+    let review_questions = quiz::generate_review(&countries, &review_progress, &mut rng, 10);
+
+    assert_eq!(app.get_screen().as_str(), "result");
+    invoke(&app, "ホームへ戻る")?;
+    invoke(
+        &app,
+        &format!("まちがえた国を復習、{}問", app.get_review_count()),
+    )?;
+    assert_eq!(app.get_screen().as_str(), "quiz");
+    assert_eq!(app.get_kind().as_str(), "map");
+    assert!(
+        map_display(&app)?
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "a fresh map review round should begin at the default view"
+    );
+    let review_question_count = usize::try_from(app.get_total_questions())?;
+    assert_eq!(review_questions.len(), review_question_count);
+    tap(&app, "地図を拡大")?;
+    for question in &review_questions {
+        answer_question(&app, question.answer)?;
+        invoke(&app, "次の問題へ")?;
+        settle();
+    }
+    assert_eq!(app.get_screen().as_str(), "result");
+    invoke(&app, "ホームへ戻る")?;
+    start_round(&app, "地図", "全地域")?;
+    assert!(
+        map_display(&app)?
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "a new map round should begin at the default view"
     );
     Ok(())
 }
@@ -628,5 +1250,191 @@ fn confirmed_quit_keeps_progress_and_stale_callbacks_cannot_open_results()
     assert_eq!(saved_app.get_score(), 0);
     assert!(!saved_app.get_answered());
     assert_eq!(saved_app.get_hints().row_count(), 1);
+    Ok(())
+}
+
+#[test]
+fn map_quit_confirmation_blocks_controls_and_preserves_view() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "地図", "全地域")?;
+
+    tap(&app, "地図を拡大")?;
+    tap(&app, "地図を拡大")?;
+    let display = map_display(&app)?;
+    let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    let viewport_position = viewport.absolute_position();
+    let viewport_size = viewport.size();
+    let image_size = image.size();
+    viewport.mock_drag(
+        LogicalPosition::new(
+            viewport_position.x + viewport_size.width / 2.0 - viewport_size.width * 3.0,
+            viewport_position.y + viewport_size.height / 2.0 - viewport_size.height * 3.0,
+        ),
+        slint::platform::PointerEventButton::Left,
+    );
+    let panned_position = image.absolute_position();
+    assert!(
+        (panned_position.x - viewport_position.x).abs() > 1.0
+            && (panned_position.y - viewport_position.y).abs() > 1.0,
+        "the setup should move the zoomed map away from its origin"
+    );
+    let zoom_description = display.accessible_description().unwrap_or_default();
+    assert!(zoom_description.contains("倍率 200％"));
+    let question_number = app.get_question_number();
+    let score = app.get_score();
+    let review_count = app.get_review_count();
+
+    invoke(&app, "クイズを中断")?;
+    assert!(app.get_quit_confirmation_open());
+    for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+        let control = accessible_button(&app, label)?;
+        assert_eq!(control.accessible_enabled(), Some(false), "{label}");
+        control.invoke_accessible_default_action();
+        control.mock_single_click(slint::platform::PointerEventButton::Left);
+    }
+    let choices = app.get_choices();
+    for index in 0..choices.row_count() {
+        let choice = choices
+            .row_data(index)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing map choice"))?;
+        let tile = accessible_button(&app, &format!("選択肢 {}: {choice}", index + 1))?;
+        assert_eq!(tile.accessible_enabled(), Some(false), "choice {index}");
+        tile.invoke_accessible_default_action();
+        tile.mock_single_click(slint::platform::PointerEventButton::Left);
+    }
+
+    viewport.mock_drag(
+        LogicalPosition::new(
+            viewport_position.x + viewport_size.width / 2.0 + viewport_size.width * 3.0,
+            viewport_position.y + viewport_size.height / 2.0 + viewport_size.height * 3.0,
+        ),
+        slint::platform::PointerEventButton::Left,
+    );
+    app.invoke_answer(0);
+    app.invoke_next_question();
+    assert!(!app.get_answered());
+    assert_eq!(app.get_question_number(), question_number);
+    assert_eq!(app.get_score(), score);
+    assert_eq!(app.get_review_count(), review_count);
+    assert_eq!(
+        display.accessible_description().unwrap_or_default(),
+        zoom_description
+    );
+    assert!(
+        (image.absolute_position().x - panned_position.x).abs() < 1.0
+            && (image.absolute_position().y - panned_position.y).abs() < 1.0
+            && (image.size().width - image_size.width).abs() < 1.0
+            && (image.size().height - image_size.height).abs() < 1.0
+            && (viewport.absolute_position().x - viewport_position.x).abs() < 1.0
+            && (viewport.absolute_position().y - viewport_position.y).abs() < 1.0
+            && (viewport.size().width - viewport_size.width).abs() < 1.0
+            && (viewport.size().height - viewport_size.height).abs() < 1.0,
+        "blocked actions should leave the zoomed and panned map unchanged"
+    );
+    Ok(())
+}
+
+#[test]
+fn map_quit_confirmation_cancel_and_restart_preserve_and_reset_view() -> Result<(), Box<dyn Error>>
+{
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let app = test_app(&progress)?;
+    start_round(&app, "地図", "全地域")?;
+
+    tap(&app, "地図を拡大")?;
+    tap(&app, "地図を拡大")?;
+    let display = map_display(&app)?;
+    let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let image = element_by_id(&app, "MapViewer::map-image-element")?;
+    let viewport_position = viewport.absolute_position();
+    let viewport_size = viewport.size();
+    viewport.mock_drag(
+        LogicalPosition::new(
+            viewport_position.x + viewport_size.width / 2.0 - viewport_size.width * 3.0,
+            viewport_position.y + viewport_size.height / 2.0 - viewport_size.height * 3.0,
+        ),
+        slint::platform::PointerEventButton::Left,
+    );
+    let panned_position = image.absolute_position();
+    assert!(
+        (panned_position.x - viewport_position.x).abs() > 1.0
+            && (panned_position.y - viewport_position.y).abs() > 1.0,
+        "the setup should move the zoomed map away from its origin"
+    );
+    let zoom_description = display.accessible_description().unwrap_or_default();
+    assert!(zoom_description.contains("倍率 200％"));
+    let question_number = app.get_question_number();
+
+    invoke(&app, "クイズを中断")?;
+    let choices = app.get_choices();
+    invoke(&app, "続ける")?;
+    assert!(!app.get_quit_confirmation_open());
+    for label in ["地図を拡大", "地図を縮小", "地図をリセット"] {
+        assert_eq!(
+            accessible_button(&app, label)?.accessible_enabled(),
+            Some(true),
+            "{label} should be re-enabled after cancel"
+        );
+    }
+    for index in 0..choices.row_count() {
+        let choice = choices
+            .row_data(index)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing map choice"))?;
+        assert_eq!(
+            accessible_button(&app, &format!("選択肢 {}: {choice}", index + 1))?
+                .accessible_enabled(),
+            Some(true),
+            "choice {index} should be re-enabled after cancel"
+        );
+    }
+    assert_eq!(
+        display.accessible_description().unwrap_or_default(),
+        zoom_description
+    );
+    assert!(
+        (image.absolute_position().x - panned_position.x).abs() < 1.0
+            && (image.absolute_position().y - panned_position.y).abs() < 1.0,
+        "cancel should preserve the panned map position"
+    );
+
+    answer_question(&app, 0)?;
+    assert!(app.get_answered());
+    invoke(&app, "クイズを中断")?;
+    let next = accessible_button(&app, "次の問題へ")?;
+    assert_eq!(next.accessible_enabled(), Some(false));
+    next.invoke_accessible_default_action();
+    assert_eq!(app.get_question_number(), question_number);
+    assert!(app.get_answered());
+    invoke(&app, "続ける")?;
+    assert_eq!(
+        accessible_button(&app, "次の問題へ")?.accessible_enabled(),
+        Some(true)
+    );
+
+    invoke(&app, "クイズを中断")?;
+    invoke(&app, "ホームへ戻る")?;
+    assert_eq!(app.get_screen().as_str(), "home");
+    assert!(!app.get_quit_confirmation_open());
+    start_round(&app, "地図", "全地域")?;
+    let new_display = map_display(&app)?;
+    let new_viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let new_image = element_by_id(&app, "MapViewer::map-image-element")?;
+    assert!(
+        new_display
+            .accessible_description()
+            .is_some_and(|description| description.contains("倍率 100％")),
+        "a new map round should reset zoom"
+    );
+    assert!(
+        (new_image.absolute_position().x - new_viewport.absolute_position().x).abs() < 1.0
+            && (new_image.absolute_position().y - new_viewport.absolute_position().y).abs() < 1.0
+            && (new_image.size().width - new_viewport.size().width).abs() < 1.0
+            && (new_image.size().height - new_viewport.size().height).abs() < 1.0,
+        "a new map round should reset pan and scale"
+    );
     Ok(())
 }

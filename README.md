@@ -11,6 +11,7 @@ During a quiz, **中断** asks for confirmation. Answered progress is kept; an u
 | <img src="docs/screenshots/quiz-map.png" width="240" alt="Native Android map question"> | <img src="docs/screenshots/quiz-trivia.png" width="240" alt="Native Android trivia question with three hints"> | <img src="docs/screenshots/result.png" width="240" alt="Native Android result with missed countries"> |
 
 Captured from an iPhone 17 Simulator (iOS 26.5) and an API 36 Android Emulator. Additional native captures: [iPhone flag](docs/screenshots/ios-flag.png), [iPhone result](docs/screenshots/ios-result.png), [iPad home](docs/screenshots/ipad-home.png), [iPad quiz](docs/screenshots/ipad-quiz.png).
+Map questions expand into the available quiz area. Use the on-screen zoom and reset controls or drag to pan; zoom tops out at 300%, with larger maps capped so the zoomed map stays within 1600 logical pixels when possible. Pinch zoom is not supported.
 
 ## Run on desktop
 
