@@ -12,6 +12,7 @@ During a quiz, **中断** asks for confirmation. Answered progress is kept; an u
 
 Captured from an iPhone 17 Simulator (iOS 26.5) and an API 36 Android Emulator. Additional native captures: [iPhone flag](docs/screenshots/ios-flag.png), [iPhone result](docs/screenshots/ios-result.png), [iPad home](docs/screenshots/ipad-home.png), [iPad quiz](docs/screenshots/ipad-quiz.png).
 Map questions expand into the available quiz area. Use the on-screen zoom and reset controls or drag to pan; zoom tops out at 300%, with larger maps capped so the zoomed map stays within 1600 logical pixels when possible. Pinch zoom is not supported.
+Flag images have a subtle frame in both questions and results, keeping white edges visible.
 
 ## Run on desktop
 
