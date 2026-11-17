@@ -12,6 +12,10 @@ default = []
 
 
 [dependencies]
+chrono = { version = "0.4.45", default-features = false, features = [
+  "clock",
+  "std",
+] }
 fastrand = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

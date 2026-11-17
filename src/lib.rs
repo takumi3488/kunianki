@@ -1,6 +1,6 @@
 //! Shared application entrypoint and platform integration for kunianki.
 
-use std::{cell::RefCell, error::Error, io, path::PathBuf, rc::Rc};
+use std::{cell::RefCell, error::Error, io, path::PathBuf, rc::Rc, time::Instant};
 
 use slint::ComponentHandle;
 
@@ -12,11 +12,14 @@ mod slint_generated {
 pub use slint_generated::AppWindow;
 pub mod assets;
 pub mod data;
+mod history;
 pub mod progress;
 pub mod quiz;
 mod session;
 
 const ROUND_LENGTH: usize = 10;
+/// Maximum records displayed on one navigable history page.
+const HISTORY_PAGE_SIZE: usize = 8;
 
 /// Settings for constructing an application window without starting its event loop.
 #[derive(Debug)]
@@ -47,6 +50,12 @@ struct AppState {
     countries: Vec<data::Country>,
     progress: progress::Progress,
     progress_path: PathBuf,
+    history_path: PathBuf,
+    history_records: Vec<history::AnswerRecord>,
+    history_page: usize,
+    history_unreadable: bool,
+    storage_warnings: Vec<String>,
+    question_started_at: Instant,
     rng: fastrand::Rng,
     session: session::Session,
 }
@@ -81,6 +90,7 @@ pub fn run(data_dir: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
 pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
     let countries = data::load_countries()?;
     let progress_path = config.progress_path;
+    let history_path = history::path_for_progress(&progress_path);
     let progress = progress::Progress::load(&progress_path);
     let rng = match config.rng_seed {
         Some(seed) => fastrand::Rng::with_seed(seed),
@@ -94,6 +104,12 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
         countries,
         progress,
         progress_path,
+        history_path,
+        history_records: Vec::new(),
+        history_page: 0,
+        history_unreadable: false,
+        storage_warnings: Vec::new(),
+        question_started_at: Instant::now(),
         rng,
         session: session::Session::default(),
     }));
@@ -131,6 +147,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             if state.session.question().is_none() {
                 return;
             }
+            state.question_started_at = Instant::now();
             ui.set_quit_confirmation_open(false);
             set_question(&ui, &state);
             ui.set_screen("quiz".into());
@@ -154,11 +171,12 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
                 } = &mut *state;
                 quiz::generate_review(countries, progress, rng, ROUND_LENGTH)
             };
-            state.session.start(questions);
+            state.session.start_review(questions);
             if state.session.question().is_none() {
                 set_review_count(&ui, &state.progress);
                 return;
             }
+            state.question_started_at = Instant::now();
             ui.set_quit_confirmation_open(false);
             set_question(&ui, &state);
             ui.set_screen("quiz".into());
@@ -180,26 +198,15 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
                 return;
             };
             let mut state = state.borrow_mut();
-            {
-                let AppState {
-                    countries,
-                    progress,
-                    progress_path,
-                    session,
-                    ..
-                } = &mut *state;
-                let Some(outcome) = session.answer(selected) else {
-                    return;
-                };
-                let Some(country) = countries.get(outcome.country_index()) else {
-                    return;
-                };
-                progress.record(&country.iso2, outcome.kind(), outcome.correct());
-                if let Err(error) = progress.save(progress_path) {
-                    eprintln!("failed to save quiz progress: {error}");
-                }
-            }
+            let Some(outcome) = state.session.answer(selected) else {
+                return;
+            };
+            let answered_at_ms = chrono::Utc::now().timestamp_millis();
+            let elapsed_ms =
+                u64::try_from(state.question_started_at.elapsed().as_millis()).unwrap_or(u64::MAX);
+            record_accepted_answer(&mut state, outcome, answered_at_ms, elapsed_ms);
             set_review_count(&ui, &state.progress);
+            set_storage_warning(&ui, &state);
             set_question(&ui, &state);
         });
     }
@@ -234,8 +241,14 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             }
 
             let mut state = state.borrow_mut();
+            let current_question_index = state.session.question_index();
             match state.session.next() {
-                session::Next::Question => set_question(&ui, &state),
+                session::Next::Question => {
+                    if state.session.question_index() != current_question_index {
+                        state.question_started_at = Instant::now();
+                    }
+                    set_question(&ui, &state);
+                }
                 session::Next::Finished => {
                     set_result(&ui, &state);
                     ui.set_screen("result".into());
@@ -247,6 +260,65 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
     {
         let weak_ui = ui.as_weak();
         let state = Rc::clone(&state);
+        ui.on_open_history(move || {
+            let Some(ui) = weak_ui.upgrade() else {
+                return;
+            };
+            let mut state = state.borrow_mut();
+            if let Ok(history) = history::load(&state.history_path) {
+                state.history_unreadable = history.records.is_empty() && history.warning.is_some();
+                state.history_records = history.records;
+                if let Some(warning) = history.warning {
+                    add_storage_warning(&mut state, &warning);
+                }
+            } else {
+                state.history_unreadable = true;
+                state.history_records.clear();
+                add_storage_warning(
+                    &mut state,
+                    "回答履歴を読み込めませんでした。元データは変更していません。",
+                );
+            }
+            state.history_page = 0;
+            set_history_page(&ui, &state);
+            set_storage_warning(&ui, &state);
+            ui.set_screen("history".into());
+        });
+    }
+
+    {
+        let weak_ui = ui.as_weak();
+        let state = Rc::clone(&state);
+        ui.on_history_older(move || {
+            let Some(ui) = weak_ui.upgrade() else {
+                return;
+            };
+            let mut state = state.borrow_mut();
+            let last_page = state.history_records.len().saturating_sub(1) / HISTORY_PAGE_SIZE;
+            if state.history_page < last_page {
+                state.history_page += 1;
+                set_history_page(&ui, &state);
+            }
+        });
+    }
+
+    {
+        let weak_ui = ui.as_weak();
+        let state = Rc::clone(&state);
+        ui.on_history_newer(move || {
+            let Some(ui) = weak_ui.upgrade() else {
+                return;
+            };
+            let mut state = state.borrow_mut();
+            if state.history_page > 0 {
+                state.history_page -= 1;
+                set_history_page(&ui, &state);
+            }
+        });
+    }
+    {
+        let weak_ui = ui.as_weak();
+        let state = Rc::clone(&state);
         ui.on_go_home(move || {
             let Some(ui) = weak_ui.upgrade() else {
                 return;
@@ -255,6 +327,9 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             ui.set_quit_confirmation_open(false);
 
             state.session = session::Session::default();
+            state.history_records.clear();
+            state.history_page = 0;
+            set_storage_warning(&ui, &state);
             set_review_count(&ui, &state.progress);
             ui.set_screen("home".into());
         });
@@ -377,6 +452,155 @@ fn set_result(ui: &slint_generated::AppWindow, state: &AppState) {
     ui.set_result_correct(ui_int(state.session.correct_count()));
     ui.set_result_score(ui_score(state.session.score()));
     ui.set_missed(slint::ModelRc::new(slint::VecModel::from(missed)));
+}
+
+fn record_accepted_answer(
+    state: &mut AppState,
+    outcome: session::AnswerOutcome,
+    answered_at_ms: i64,
+    elapsed_ms: u64,
+) {
+    let correct_iso2 = state
+        .countries
+        .get(outcome.country_index())
+        .map(|country| country.iso2.clone());
+    if let Some(iso2) = correct_iso2.as_deref() {
+        state
+            .progress
+            .record(iso2, outcome.kind(), outcome.correct());
+    } else {
+        add_storage_warning(
+            state,
+            "学習進捗を更新できませんでした。国データを確認してください。",
+        );
+    }
+    if state.progress.save(&state.progress_path).is_err() {
+        add_storage_warning(
+            state,
+            "学習進捗を保存できませんでした。端末の保存領域を確認してください。",
+        );
+    }
+
+    let selected_iso2 = state
+        .countries
+        .get(outcome.selected_country_index())
+        .map(|country| country.iso2.clone());
+    let choice_iso2 = outcome
+        .choice_country_indices()
+        .into_iter()
+        .map(|index| {
+            state
+                .countries
+                .get(index)
+                .map(|country| country.iso2.clone())
+        })
+        .collect::<Option<Vec<_>>>();
+    if let (Some(correct_iso2), Some(selected_iso2), Some(choice_iso2)) =
+        (correct_iso2, selected_iso2, choice_iso2)
+    {
+        let record = history::AnswerRecord {
+            answered_at_ms,
+            kind: outcome.kind(),
+            correct_iso2,
+            selected_iso2,
+            correct: outcome.correct(),
+            hints_shown: outcome.hints_shown(),
+            points: outcome.points(),
+            elapsed_ms,
+            choice_iso2,
+            review: outcome.review(),
+        };
+        if history::append(&state.history_path, &record).is_err() {
+            add_storage_warning(
+                state,
+                "回答履歴を保存できませんでした。端末の保存領域を確認してください。",
+            );
+        }
+    } else {
+        add_storage_warning(
+            state,
+            "回答履歴を保存できませんでした。国データを確認してください。",
+        );
+    }
+}
+
+fn add_storage_warning(state: &mut AppState, warning: &str) {
+    if !state
+        .storage_warnings
+        .iter()
+        .any(|existing| existing == warning)
+    {
+        state.storage_warnings.push(warning.into());
+    }
+}
+
+fn set_storage_warning(ui: &slint_generated::AppWindow, state: &AppState) {
+    ui.set_storage_warning(state.storage_warnings.join("\n").into());
+}
+
+fn set_history_page(ui: &slint_generated::AppWindow, state: &AppState) {
+    let record_count = state.history_records.len();
+    let page_count = record_count.div_ceil(HISTORY_PAGE_SIZE);
+    let page = state.history_page.min(page_count.saturating_sub(1));
+    let items = state
+        .history_records
+        .iter()
+        .skip(page * HISTORY_PAGE_SIZE)
+        .take(HISTORY_PAGE_SIZE)
+        .map(|record| {
+            let correct_country = history_country_name(&state.countries, &record.correct_iso2);
+            let selected_country = history_country_name(&state.countries, &record.selected_iso2);
+            let review = if record.review { " / 復習" } else { "" };
+            slint_generated::HistoryItem {
+                timestamp: history::local_timestamp(record.answered_at_ms).into(),
+                outcome: format!(
+                    "{} / {}",
+                    if record.correct {
+                        "正解"
+                    } else {
+                        "不正解"
+                    },
+                    history_kind_name(record.kind)
+                )
+                .into(),
+                countries: format!("正解: {correct_country} / 選択: {selected_country}").into(),
+                details: format!(
+                    "ヒント: {}  得点: {}  回答時間: {}.{:03}秒{}",
+                    record.hints_shown,
+                    record.points,
+                    record.elapsed_ms / 1_000,
+                    record.elapsed_ms % 1_000,
+                    review
+                )
+                .into(),
+            }
+        })
+        .collect::<Vec<_>>();
+    ui.set_history_items(slint::ModelRc::new(slint::VecModel::from(items)));
+    ui.set_history_empty(record_count == 0);
+    ui.set_history_unreadable(state.history_unreadable);
+    ui.set_history_has_newer(page > 0);
+    ui.set_history_has_older(page + 1 < page_count);
+    ui.set_history_page_label(if record_count == 0 {
+        "0件".into()
+    } else {
+        format!("{} / {}", page + 1, page_count).into()
+    });
+}
+
+fn history_country_name(countries: &[data::Country], iso2: &str) -> String {
+    countries
+        .iter()
+        .find(|country| country.iso2 == iso2)
+        .map_or_else(|| iso2.to_owned(), |country| country.name_ja.clone())
+}
+
+fn history_kind_name(kind: quiz::QuestionKind) -> &'static str {
+    match kind {
+        quiz::QuestionKind::Flag => "国旗",
+        quiz::QuestionKind::Map => "地図",
+        quiz::QuestionKind::Trivia => "ヒント",
+    }
 }
 
 fn kind_name(kind: quiz::QuestionKind) -> &'static str {

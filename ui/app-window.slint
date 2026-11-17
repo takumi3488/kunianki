@@ -7,6 +7,13 @@ export struct MissedItem {
     flag: image,
 }
 
+export struct HistoryItem {
+    timestamp: string,
+    outcome: string,
+    countries: string,
+    details: string,
+}
+
 export global AtlasColors {
     out property <color> canvas: #edf3f1;
     out property <color> paper: #ffffff;
@@ -475,6 +482,46 @@ component MissedRow inherits Rectangle {
     }
 }
 
+component HistoryRow inherits Rectangle {
+    in property <HistoryItem> item;
+
+    height: 128px;
+    border-radius: 14px;
+    background: AtlasColors.paper;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+
+        Text {
+            text: root.item.timestamp;
+            color: AtlasColors.muted;
+            font-size: 11px;
+        }
+
+        Text {
+            text: root.item.outcome;
+            color: AtlasColors.ink;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        Text {
+            text: root.item.countries;
+            color: AtlasColors.ink;
+            font-size: 12px;
+            wrap: word-wrap;
+        }
+
+        Text {
+            text: root.item.details;
+            color: AtlasColors.muted;
+            font-size: 11px;
+            wrap: word-wrap;
+        }
+    }
+}
+
 export component AppWindow inherits Window {
     in-out property <string> screen: "home";
     in property <int> review-count;
@@ -501,6 +548,17 @@ export component AppWindow inherits Window {
     in property <int> result-score;
     in property <[MissedItem]> missed;
     callback go-home();
+
+    in property <[HistoryItem]> history-items;
+    in property <bool> history-empty;
+    in property <bool> history-unreadable;
+    in property <bool> history-has-older;
+    in property <bool> history-has-newer;
+    in property <string> history-page-label;
+    in property <string> storage-warning: "";
+    callback open-history();
+    callback history-older();
+    callback history-newer();
     in-out property <bool> quit-confirmation-open: false;
 
     private property <int> chosen-mode: 0;
@@ -742,31 +800,66 @@ export component AppWindow inherits Window {
                 }
             }
 
+            if root.storage-warning != "": Text {
+                text: root.storage-warning;
+                color: AtlasColors.accent;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
             Rectangle {
                 vertical-stretch: 1;
                 background: transparent;
             }
 
-            Rectangle {
-                accessible-role: button;
-                accessible-label: "このアプリについて";
-                accessible-action-default => { root.screen = "about"; }
+            HorizontalLayout {
                 height: 42px;
-                background: transparent;
+                spacing: 8px;
 
-                Text {
-                    text: "このアプリについて";
-                    color: AtlasColors.muted;
-                    font-size: 13px;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                    height: 100%;
-                    width: 100%;
+                Rectangle {
+                    accessible-role: button;
+                    accessible-label: "回答履歴を見る";
+                    accessible-action-default => { root.open-history(); }
+                    horizontal-stretch: 1;
+                    height: 42px;
+                    background: transparent;
+
+                    Text {
+                        text: "回答履歴";
+                        color: AtlasColors.muted;
+                        font-size: 13px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        width: 100%;
+                        height: 100%;
+                    }
+
+                    TouchArea {
+                        clicked => { root.open-history(); }
+                    }
                 }
 
-                TouchArea {
-                    clicked => {
-                        root.screen = "about";
+                Rectangle {
+                    accessible-role: button;
+                    accessible-label: "このアプリについて";
+                    accessible-action-default => { root.screen = "about"; }
+                    horizontal-stretch: 1;
+                    height: 42px;
+                    background: transparent;
+
+                    Text {
+                        text: "このアプリについて";
+                        color: AtlasColors.muted;
+                        font-size: 13px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        width: 100%;
+                        height: 100%;
+                    }
+
+                    TouchArea {
+                        clicked => {
+                            root.screen = "about";
+                        }
                     }
                 }
             }
@@ -1163,6 +1256,12 @@ export component AppWindow inherits Window {
                 enabled: !root.quit-confirmation-open;
                 tapped => { root.next-question(); }
             }
+            if root.storage-warning != "": Text {
+                text: root.storage-warning;
+                color: AtlasColors.accent;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
         }
         if root.screen == "quiz" && root.quit-confirmation-open: Rectangle {
             x: 0;
@@ -1227,6 +1326,123 @@ export component AppWindow inherits Window {
                         height: 52px;
                         tapped => { root.go-home(); }
                     }
+                }
+            }
+        }
+
+        if root.screen == "history": VerticalLayout {
+            padding: 20px;
+            spacing: 0px;
+
+            HorizontalLayout {
+                height: 36px;
+                BackButton {
+                    tapped => { root.go-home(); }
+                }
+            }
+
+            Rectangle {
+                height: 20px;
+                background: transparent;
+            }
+
+            Text {
+                text: "回答履歴";
+                color: AtlasColors.ink;
+                font-size: 23px;
+                font-weight: 700;
+            }
+
+            Rectangle {
+                height: 6px;
+                background: transparent;
+            }
+
+            Text {
+                text: "新しい回答から順に表示します";
+                color: AtlasColors.muted;
+                font-size: 13px;
+            }
+
+            if root.storage-warning != "": Text {
+                text: root.storage-warning;
+                color: AtlasColors.accent;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
+
+            Rectangle {
+                height: 12px;
+                background: transparent;
+            }
+
+            if root.history-empty && !root.history-unreadable: Text {
+                text: "まだ回答履歴はありません。\nクイズに答えると、ここに記録されます。";
+                color: AtlasColors.muted;
+                font-size: 14px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                height: 160px;
+                width: 100%;
+                wrap: word-wrap;
+            }
+
+            if root.history-empty && root.history-unreadable: Text {
+                text: "履歴を表示できませんでした（元データは保持しています）";
+                color: AtlasColors.accent;
+                font-size: 14px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                height: 160px;
+                width: 100%;
+                wrap: word-wrap;
+            }
+
+            if root.history-empty: Rectangle {
+                vertical-stretch: 1;
+                background: transparent;
+            }
+
+            if !root.history-empty: ScrollView {
+                vertical-stretch: 1;
+                vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+                mouse-drag-pan-enabled: true;
+
+                VerticalLayout {
+                    spacing: 8px;
+                    for item in root.history-items: HistoryRow {
+                        item: item;
+                    }
+                }
+            }
+
+            if !root.history-empty: HorizontalLayout {
+                height: 50px;
+                spacing: 8px;
+
+                ActionButton {
+                    width: 112px;
+                    height: 48px;
+                    label: "新しい記録";
+                    enabled: root.history-has-newer;
+                    tapped => { root.history-newer(); }
+                }
+
+                Text {
+                    text: root.history-page-label;
+                    horizontal-stretch: 1;
+                    color: AtlasColors.muted;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                ActionButton {
+                    width: 112px;
+                    height: 48px;
+                    label: "古い記録";
+                    enabled: root.history-has-older;
+                    tapped => { root.history-older(); }
                 }
             }
         }
@@ -1326,6 +1542,12 @@ export component AppWindow inherits Window {
                 }
             }
 
+            if root.storage-warning != "": Text {
+                text: root.storage-warning;
+                color: AtlasColors.accent;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
             Rectangle {
                 min-height: 16px;
                 vertical-stretch: root.missed.length > 0 ? 0 : 1;
