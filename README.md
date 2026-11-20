@@ -1,4 +1,4 @@
-# kunianki
+# 国あんき
 
 A Japanese country quiz built with Rust and Slint.
 
