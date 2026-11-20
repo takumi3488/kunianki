@@ -102,6 +102,7 @@ component BackButton inherits Rectangle {
 
     HorizontalLayout {
         spacing: 8px;
+
         Text {
             text: "‹";
             color: AtlasColors.accent;
@@ -733,6 +734,7 @@ export component AppWindow inherits Window {
 
                     HorizontalLayout {
                         spacing: 10px;
+
                         Text {
                             text: "193";
                             color: #ffffff;
@@ -896,6 +898,7 @@ export component AppWindow inherits Window {
 
             HorizontalLayout {
                 height: 36px;
+
                 BackButton {
                     tapped => { root.screen = "home"; }
                 }
@@ -943,6 +946,7 @@ export component AppWindow inherits Window {
 
             GridLayout {
                 spacing: 8px;
+
                 Row {
                     OptionTile {
                         label: "国旗";
@@ -995,6 +999,7 @@ export component AppWindow inherits Window {
 
             GridLayout {
                 spacing: 8px;
+
                 Row {
                     OptionTile {
                         label: "全地域";
@@ -1073,6 +1078,7 @@ export component AppWindow inherits Window {
             HorizontalLayout {
                 height: 48px;
                 spacing: 8px;
+
                 Text {
                     text: "第 \{root.question-number} 問";
                     color: AtlasColors.ink;
@@ -1133,6 +1139,7 @@ export component AppWindow inherits Window {
                 height: 5px;
                 border-radius: 3px;
                 background: AtlasColors.line;
+
                 Rectangle {
                     width: root.total-questions > 0
                         ? parent.width * root.question-number / root.total-questions
@@ -1360,6 +1367,7 @@ export component AppWindow inherits Window {
 
             HorizontalLayout {
                 height: 36px;
+
                 BackButton {
                     tapped => { root.go-home(); }
                 }
@@ -1491,6 +1499,7 @@ export component AppWindow inherits Window {
                 height: 164px;
                 border-radius: 24px;
                 background: AtlasColors.ink;
+
                 HorizontalLayout {
                     padding: 22px;
                     spacing: 12px;
@@ -1498,6 +1507,7 @@ export component AppWindow inherits Window {
                     VerticalLayout {
                         alignment: center;
                         spacing: 4px;
+
                         Text {
                             text: "正解";
                             color: AtlasColors.sea;
@@ -1519,6 +1529,7 @@ export component AppWindow inherits Window {
 
                     VerticalLayout {
                         alignment: center;
+
                         Text {
                             text: "\{root.result-score}";
                             color: AtlasColors.accent;
@@ -1558,6 +1569,7 @@ export component AppWindow inherits Window {
                 vertical-stretch: 1;
                 mouse-drag-pan-enabled: true;
                 vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+
                 VerticalLayout {
                     spacing: 8px;
                     for item in root.missed: MissedRow {
@@ -1590,6 +1602,7 @@ export component AppWindow inherits Window {
 
             HorizontalLayout {
                 height: 36px;
+
                 BackButton {
                     tapped => { root.screen = "home"; }
                 }
@@ -1639,12 +1652,14 @@ export component AppWindow inherits Window {
                 height: 224px;
                 border-radius: 18px;
                 background: AtlasColors.paper;
+
                 VerticalLayout {
                     padding: 16px;
                     spacing: 0px;
 
                     HorizontalLayout {
                         height: 42px;
+
                         Text {
                             text: "国のデータ";
                             color: AtlasColors.ink;
@@ -1673,6 +1688,7 @@ export component AppWindow inherits Window {
 
                     HorizontalLayout {
                         height: 42px;
+
                         Text {
                             text: "国旗";
                             color: AtlasColors.ink;
@@ -1701,6 +1717,7 @@ export component AppWindow inherits Window {
 
                     HorizontalLayout {
                         height: 42px;
+
                         Text {
                             text: "地図";
                             color: AtlasColors.ink;
@@ -1729,6 +1746,7 @@ export component AppWindow inherits Window {
 
                     HorizontalLayout {
                         height: 42px;
+
                         Text {
                             text: "日本語書体";
                             color: AtlasColors.ink;
@@ -1781,6 +1799,7 @@ export component AppWindow inherits Window {
 
             HorizontalLayout {
                 alignment: center;
+
                 AboutSlint {
                     width: 154px;
                     height: 40px;
@@ -1793,6 +1812,7 @@ export component AppWindow inherits Window {
 
             HorizontalLayout {
                 height: 36px;
+
                 BackButton {
                     label: "戻る";
                     tapped => { root.screen = "about"; }
