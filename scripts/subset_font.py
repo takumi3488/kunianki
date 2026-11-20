@@ -32,7 +32,7 @@ SOURCE_SHA256 = "c2f3b4d463500a2ddcd3849cded1fceeb9fd6d1c32e6cbecd568453ba50fc68
 
 # These remain explicit even if app/data strings are later reorganized.
 REQUIRED_SAMPLES = {
-    "Japanese UI": "くに暗記、世界のかたち。",
+    "Japanese UI": "国あんき、世界のかたち。",
     "country-name diacritics": "Côte d'Ivoire / São Tomé and Príncipe",
 }
 EXTRA_CHARACTERS = "\u00a0\u2026\u3007"

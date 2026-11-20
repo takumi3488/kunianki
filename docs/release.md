@@ -62,7 +62,7 @@ iPhoneは既存どおりPortraitのみとし、iPadはPortrait、Portrait Upside
 
 ## ストア掲載情報・提出物
 
-日本語の入力原稿は [`google-play.json`](../store/ja-JP/google-play.json) と [`app-store.json`](../store/ja-JP/app-store.json) にあります。アプリ名はストア名・ネイティブ表示名の「国あんき」、画面内表示は既存どおり「くに暗記」です。日本語の説明は国連加盟193か国、国旗・地図・雑学の4択、3段階のヒント、誤答の復習、オフライン、ログイン不要という現行機能に限定しています。
+日本語の入力原稿は [`google-play.json`](../store/ja-JP/google-play.json) と [`app-store.json`](../store/ja-JP/app-store.json) にあります。ストア、ランチャー、アプリ内の表示名は「国あんき」に統一しています。日本語の説明は国連加盟193か国、国旗・地図・雑学の4択、3段階のヒント、誤答の復習、オフライン、ログイン不要という現行機能に限定しています。
 
 | ストア | 掲載欄と上限 | 提出前に用意・確認する項目 |
 | --- | --- | --- |

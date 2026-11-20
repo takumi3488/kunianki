@@ -360,7 +360,7 @@ def feature_svg(mark: ET.Element) -> str:
         f'<rect width="1024" height="500" fill="{CANVAS}" />'
         f'{group}'
         '<text x="500" y="306" fill="{ink}" font-family="Noto Sans JP" '
-        'font-size="112" font-weight="700">くに暗記</text>'
+        'font-size="112" font-weight="700">国あんき</text>'
         '</svg>\n'
     ).replace("{ink}", INK)
 
