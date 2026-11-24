@@ -391,7 +391,10 @@ impl Mixer {
     /// Returns the number of effects still playing.
     #[must_use]
     pub fn active_voices(&self) -> usize {
-        self.slots.iter().filter(|slot| slot.cursor.is_some()).count()
+        self.slots
+            .iter()
+            .filter(|slot| slot.cursor.is_some())
+            .count()
     }
 
     /// Returns one while this effect is playing, or zero otherwise.
@@ -400,7 +403,10 @@ impl Mixer {
         usize::from(self.slots[effect.slot()].cursor.is_some())
     }
 
-    #[expect(clippy::cast_precision_loss, reason = "2 ms of u32 sample rates fits exactly in f32")]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "2 ms of u32 sample rates fits exactly in f32"
+    )]
     fn next_sample(&mut self) -> f32 {
         let mut mixed: f32 = 0.0;
         for (slot, waveform) in self.slots.iter_mut().zip(&self.waveforms) {
@@ -524,7 +530,10 @@ mod tests {
         for (idle, pause_error) in [
             (IDLE_TIMEOUT, None),
             (Duration::from_millis(20), None),
-            (Duration::from_millis(20), Some(cpal::ErrorKind::UnsupportedOperation)),
+            (
+                Duration::from_millis(20),
+                Some(cpal::ErrorKind::UnsupportedOperation),
+            ),
         ] {
             let (requests, incoming) = mpsc::sync_channel(QUEUE_CAPACITY);
             let (events, observed) = mpsc::channel();
@@ -537,10 +546,15 @@ mod tests {
                     |pending, errors| {
                         let pending = std::sync::Arc::new(std::sync::Mutex::new(pending));
                         output.send((pending.clone(), errors))?;
-                        Ok(FakeStream { events, pending, pause_error })
+                        Ok(FakeStream {
+                            events,
+                            pending,
+                            pause_error,
+                        })
                     },
                     |error| {
-                        let _ = failures.send(error.downcast_ref::<cpal::Error>().map(cpal::Error::kind));
+                        let _ = failures
+                            .send(error.downcast_ref::<cpal::Error>().map(cpal::Error::kind));
                     },
                 );
             });
@@ -559,7 +573,10 @@ mod tests {
             report_stream_error(&errors, terminal.into());
             assert_eq!(reported.recv_timeout(deadline)?, Some(terminal));
             // The stream owns the only event sender. It must drop without another cue.
-            assert_eq!(observed.recv_timeout(deadline), Err(RecvTimeoutError::Disconnected));
+            assert_eq!(
+                observed.recv_timeout(deadline),
+                Err(RecvTimeoutError::Disconnected)
+            );
             requests.send(SoundEffect::Correct)?;
             drop(requests);
             assert!(worker.join().is_ok(), "audio worker panicked");
