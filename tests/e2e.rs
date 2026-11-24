@@ -1,14 +1,18 @@
 use std::{
+    cell::RefCell,
     collections::HashSet,
     error::Error,
     fs, io,
     path::PathBuf,
+    rc::Rc,
     sync::atomic::{AtomicUsize, Ordering},
     time::Duration,
 };
 
 use i_slint_backend_testing::{AccessibleRole, ElementHandle, ElementRoot};
+use kunianki::sound::{SoundEffect, SoundPlayer};
 use kunianki::{AppConfig, AppWindow, build_app, data, progress, quiz};
+use slint::platform::{PointerEventButton, WindowEvent};
 use slint::{ComponentHandle, LogicalPosition, Model};
 
 const TEST_SEED: u64 = 0x4b55_4e49;
@@ -298,6 +302,224 @@ fn finish_flag_round(app: &AppWindow) -> Result<Vec<String>, Box<dyn Error>> {
         invoke(app, "次の問題へ")?;
     }
     Ok(missed)
+}
+
+#[derive(Debug, Default)]
+struct RecordingPlayer(RefCell<Vec<SoundEffect>>);
+
+impl SoundPlayer for RecordingPlayer {
+    fn play(&self, effect: SoundEffect) {
+        self.0.borrow_mut().push(effect);
+    }
+}
+
+impl RecordingPlayer {
+    fn take(&self) -> Vec<SoundEffect> {
+        self.0.take()
+    }
+}
+
+fn sound_app(progress: &TestProgress) -> Result<(AppWindow, Rc<RecordingPlayer>), Box<dyn Error>> {
+    let player = Rc::new(RecordingPlayer::default());
+    let app = build_app(progress.config(TEST_SEED).with_sound_player(player.clone()))?;
+    app.window().set_size(slint::PhysicalSize::new(390, 844));
+    Ok((app, player))
+}
+
+type ButtonInput = fn(&AppWindow, &str) -> Result<(), Box<dyn Error>>;
+const BUTTON_INPUTS: [ButtonInput; 2] = [invoke, tap];
+
+fn assert_tap_sound(
+    app: &AppWindow,
+    player: &RecordingPlayer,
+    press: ButtonInput,
+    label: &str,
+) -> Result<(), Box<dyn Error>> {
+    settle();
+    press(app, label)?;
+    assert_eq!(player.take(), [SoundEffect::Tap], "button {label:?}");
+    Ok(())
+}
+
+#[test]
+fn sound_navigation_buttons_request_one_tap_for_either_input() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    for press in BUTTON_INPUTS {
+        let progress = TestProgress::new()?;
+        let mut saved = progress::Progress::default();
+        saved.record("JP", quiz::QuestionKind::Flag, false);
+        saved.save(&progress.file)?;
+        let (app, player) = sound_app(&progress)?;
+        for label in [
+            "このアプリについて",
+            "ホーム",
+            "回答履歴を見る",
+            "ホーム",
+            "クイズを始める",
+            "3ヒント",
+            "全地域",
+            "10問を始める",
+            "次のヒントを見る",
+            "クイズを中断",
+            "ホームへ戻る",
+            "まちがえた国を復習、1問",
+        ] {
+            assert_tap_sound(&app, &player, press, label)?;
+        }
+        assert_eq!(app.get_screen().as_str(), "quiz");
+    }
+    Ok(())
+}
+
+#[test]
+fn sound_disabled_review_tile_is_silent_for_either_input() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let (app, player) = sound_app(&progress)?;
+    for press in BUTTON_INPUTS {
+        press(&app, "まちがえた国を復習、0問")?;
+        assert_eq!(player.take(), [SoundEffect::Tap; 0]);
+        assert_eq!(app.get_screen().as_str(), "home");
+    }
+    Ok(())
+}
+
+#[test]
+fn sound_map_control_taps_but_map_drag_is_silent() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let (app, player) = sound_app(&progress)?;
+    start_round(&app, "地図", "全地域")?;
+    player.take();
+    for press in BUTTON_INPUTS {
+        assert_tap_sound(&app, &player, press, "地図を拡大")?;
+    }
+    settle();
+    let viewport = element_by_id(&app, "MapViewer::map-flickable")?;
+    let origin = viewport.absolute_position();
+    let size = viewport.size();
+    viewport.mock_drag(
+        LogicalPosition::new(origin.x + size.width / 4.0, origin.y + size.height / 4.0),
+        PointerEventButton::Left,
+    );
+    assert!(player.take().is_empty(), "map panning is not a button");
+    Ok(())
+}
+
+#[test]
+fn sound_only_accepted_answers_request_feedback_for_either_input() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let correct = first_flag_answer_index()?;
+    for press in BUTTON_INPUTS {
+        for expected in [SoundEffect::Correct, SoundEffect::Incorrect] {
+            let progress = TestProgress::new()?;
+            let (app, player) = sound_app(&progress)?;
+            start_round(&app, "国旗", "全地域")?;
+            let index = if expected == SoundEffect::Correct {
+                correct
+            } else {
+                (correct + 1) % app.get_choices().row_count()
+            };
+            let choice = app
+                .get_choices()
+                .row_data(index)
+                .ok_or_else(|| io::Error::other("seeded flag choice is absent"))?;
+            let label = format!("選択肢 {}: {choice}", index + 1);
+            let selected = i32::try_from(index)?;
+            invoke(&app, "クイズを中断")?;
+            assert!(app.get_quit_confirmation_open());
+            player.take();
+            settle();
+            invoke(&app, &label)?;
+            app.invoke_answer(selected);
+            assert!(player.take().is_empty(), "modal blocks answer feedback");
+            assert!(!app.get_answered());
+
+            let position = LogicalPosition::new(4.0, 4.0);
+            let button = PointerEventButton::Left;
+            for event in [
+                WindowEvent::PointerMoved { position },
+                WindowEvent::PointerPressed { position, button },
+                WindowEvent::PointerReleased { position, button },
+            ] {
+                app.window().dispatch_event(event);
+            }
+            assert!(app.get_quit_confirmation_open());
+            assert!(player.take().is_empty(), "modal backdrop is not a button");
+
+            invoke(&app, "続ける")?;
+            player.take();
+            settle();
+            press(&app, &label)?;
+            assert!(app.get_answered());
+            assert_eq!(player.take(), [expected], "accepted answer has no Tap");
+            press(&app, &label)?;
+            app.invoke_answer(selected);
+            assert!(player.take().is_empty(), "duplicate answer has no feedback");
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn sound_flag_round_plays_completion_only_after_final_next_tap() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    for press in BUTTON_INPUTS {
+        assert_sound_flag_round(press)?;
+    }
+    Ok(())
+}
+
+fn assert_sound_flag_round(press: ButtonInput) -> Result<(), Box<dyn Error>> {
+    let progress = TestProgress::new()?;
+    let (app, player) = sound_app(&progress)?;
+    start_round(&app, "国旗", "全地域")?;
+    assert_eq!(player.take(), [SoundEffect::Tap; 4]);
+    assert_eq!(app.get_total_questions(), 10);
+    let mut correct_count = 0;
+    let mut incorrect_count = 0;
+    for index in 0..10 {
+        let choice = if index == 0 {
+            first_flag_answer_index()?
+        } else {
+            index % app.get_choices().row_count()
+        };
+        let (correct, _, _) = answer_question(&app, choice)?;
+        let requested = player.take();
+        let expected = if correct {
+            SoundEffect::Correct
+        } else {
+            SoundEffect::Incorrect
+        };
+        assert_eq!(requested, [expected], "question {}", index + 1);
+        if correct {
+            correct_count += 1;
+        } else {
+            incorrect_count += 1;
+        }
+        assert_eq!(app.get_screen().as_str(), "quiz");
+        press(&app, "次の問題へ")?;
+        if index == 9 {
+            assert_eq!(app.get_screen().as_str(), "result");
+            assert_eq!(
+                player.take(),
+                [SoundEffect::Tap, SoundEffect::RoundComplete]
+            );
+            app.invoke_next_question();
+            assert_eq!(app.get_screen().as_str(), "result");
+            assert!(
+                player.take().is_empty(),
+                "stale next cannot replay completion"
+            );
+        } else {
+            assert_eq!(app.get_screen().as_str(), "quiz");
+            assert_eq!(player.take(), [SoundEffect::Tap]);
+        }
+    }
+    let result_correct = usize::try_from(app.get_result_correct())?;
+    assert_eq!(correct_count, result_correct);
+    assert_eq!(incorrect_count, 10 - result_correct);
+    Ok(())
 }
 
 #[test]

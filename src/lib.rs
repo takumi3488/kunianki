@@ -3,6 +3,7 @@
 use std::{cell::RefCell, error::Error, io, path::PathBuf, rc::Rc, time::Instant};
 
 use slint::ComponentHandle;
+use sound::SoundEffect;
 
 #[expect(clippy::unwrap_used, reason = "Slint-generated UI code uses unwrap")]
 mod slint_generated {
@@ -16,6 +17,7 @@ mod history;
 pub mod progress;
 pub mod quiz;
 mod session;
+pub mod sound;
 
 const ROUND_LENGTH: usize = 10;
 /// Maximum records displayed on one navigable history page.
@@ -26,6 +28,7 @@ const HISTORY_PAGE_SIZE: usize = 8;
 pub struct AppConfig {
     progress_path: PathBuf,
     rng_seed: Option<u64>,
+    sound: Rc<dyn sound::SoundPlayer>,
 }
 
 impl AppConfig {
@@ -35,6 +38,7 @@ impl AppConfig {
         Self {
             progress_path,
             rng_seed: None,
+            sound: Rc::new(sound::SilentPlayer),
         }
     }
 
@@ -42,6 +46,13 @@ impl AppConfig {
     #[must_use]
     pub fn with_rng_seed(mut self, seed: u64) -> Self {
         self.rng_seed = Some(seed);
+        self
+    }
+
+    /// Selects the player that receives sound effect requests.
+    #[must_use]
+    pub fn with_sound_player(mut self, player: Rc<dyn sound::SoundPlayer>) -> Self {
+        self.sound = player;
         self
     }
 }
@@ -70,7 +81,9 @@ pub fn run(data_dir: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
         Some(directory) => directory.join("progress.json"),
         None => default_data_dir()?.join("progress.json"),
     };
-    let ui = build_app(AppConfig::new(progress_path))?;
+    let config =
+        AppConfig::new(progress_path).with_sound_player(Rc::new(sound::SystemPlayer::start()));
+    let ui = build_app(config)?;
     ui.run()?;
     Ok(())
 }
@@ -97,6 +110,12 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
         None => fastrand::Rng::new(),
     };
     let ui = AppWindow::new()?;
+    let sound = config.sound;
+    {
+        let sound = Rc::clone(&sound);
+        ui.global::<slint_generated::SoundEvents>()
+            .on_tap(move || sound.play(SoundEffect::Tap));
+    }
     ui.set_privacy_text(include_str!("../docs/privacy.md").into());
     ui.set_flag_license_text(include_str!("../assets/flags/LICENSE").into());
     ui.set_font_license_text(include_str!("../assets/fonts/OFL.txt").into());
@@ -186,6 +205,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
     {
         let weak_ui = ui.as_weak();
         let state = Rc::clone(&state);
+        let sound = Rc::clone(&sound);
         ui.on_answer(move |selected| {
             let Some(ui) = weak_ui.upgrade() else {
                 return;
@@ -201,6 +221,11 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             let Some(outcome) = state.session.answer(selected) else {
                 return;
             };
+            let feedback = if outcome.correct() {
+                SoundEffect::Correct
+            } else {
+                SoundEffect::Incorrect
+            };
             let answered_at_ms = chrono::Utc::now().timestamp_millis();
             let elapsed_ms =
                 u64::try_from(state.question_started_at.elapsed().as_millis()).unwrap_or(u64::MAX);
@@ -208,6 +233,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
             set_review_count(&ui, &state.progress);
             set_storage_warning(&ui, &state);
             set_question(&ui, &state);
+            sound.play(feedback);
         });
     }
 
@@ -252,6 +278,7 @@ pub fn build_app(config: AppConfig) -> Result<AppWindow, Box<dyn Error>> {
                 session::Next::Finished => {
                     set_result(&ui, &state);
                     ui.set_screen("result".into());
+                    sound.play(SoundEffect::RoundComplete);
                 }
             }
         });
