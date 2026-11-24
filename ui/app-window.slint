@@ -14,6 +14,10 @@ export struct HistoryItem {
     details: string,
 }
 
+export global SoundEvents {
+    callback tap();
+}
+
 export global AtlasColors {
     out property <color> canvas: #edf3f1;
     out property <color> paper: #ffffff;
@@ -62,6 +66,7 @@ component ActionButton inherits Rectangle {
     accessible-enabled: root.enabled;
     accessible-action-default => {
         if (root.enabled) {
+            SoundEvents.tap();
             root.tapped();
         }
     }
@@ -83,6 +88,7 @@ component ActionButton inherits Rectangle {
     TouchArea {
         clicked => {
             if (root.enabled) {
+                SoundEvents.tap();
                 root.tapped();
             }
         }
@@ -95,7 +101,10 @@ component BackButton inherits Rectangle {
 
     accessible-role: button;
     accessible-label: root.label;
-    accessible-action-default => { root.tapped(); }
+    accessible-action-default => {
+        SoundEvents.tap();
+        root.tapped();
+    }
     width: 88px;
     height: 36px;
     background: transparent;
@@ -119,7 +128,10 @@ component BackButton inherits Rectangle {
     }
 
     TouchArea {
-        clicked => { root.tapped(); }
+        clicked => {
+            SoundEvents.tap();
+            root.tapped();
+        }
     }
 }
 
@@ -132,7 +144,10 @@ component OptionTile inherits Rectangle {
 
     accessible-role: button;
     accessible-label: root.label;
-    accessible-action-default => { root.tapped(); }
+    accessible-action-default => {
+        SoundEvents.tap();
+        root.tapped();
+    }
     height: root.tile-height;
     border-radius: 14px;
     border-width: 1px;
@@ -152,6 +167,7 @@ component OptionTile inherits Rectangle {
 
     TouchArea {
         clicked => {
+            SoundEvents.tap();
             root.tapped();
         }
     }
@@ -247,6 +263,7 @@ component MapControlButton inherits Rectangle {
     accessible-enabled: root.enabled;
     accessible-action-default => {
         if (root.enabled) {
+            SoundEvents.tap();
             root.tapped();
         }
     }
@@ -271,6 +288,7 @@ component MapControlButton inherits Rectangle {
     TouchArea {
         clicked => {
             if (root.enabled) {
+                SoundEvents.tap();
                 root.tapped();
             }
         }
@@ -775,6 +793,7 @@ export component AppWindow inherits Window {
                 accessible-enabled: root.review-count > 0;
                 accessible-action-default => {
                     if (root.review-count > 0) {
+                        SoundEvents.tap();
                         root.start-review();
                     }
                 }
@@ -821,6 +840,7 @@ export component AppWindow inherits Window {
                 TouchArea {
                     clicked => {
                         if (root.review-count > 0) {
+                            SoundEvents.tap();
                             root.start-review();
                         }
                     }
@@ -845,7 +865,10 @@ export component AppWindow inherits Window {
                 Rectangle {
                     accessible-role: button;
                     accessible-label: "回答履歴を見る";
-                    accessible-action-default => { root.open-history(); }
+                    accessible-action-default => {
+                        SoundEvents.tap();
+                        root.open-history();
+                    }
                     horizontal-stretch: 1;
                     height: 42px;
                     background: transparent;
@@ -861,14 +884,20 @@ export component AppWindow inherits Window {
                     }
 
                     TouchArea {
-                        clicked => { root.open-history(); }
+                        clicked => {
+                            SoundEvents.tap();
+                            root.open-history();
+                        }
                     }
                 }
 
                 Rectangle {
                     accessible-role: button;
                     accessible-label: "このアプリについて";
-                    accessible-action-default => { root.screen = "about"; }
+                    accessible-action-default => {
+                        SoundEvents.tap();
+                        root.screen = "about";
+                    }
                     horizontal-stretch: 1;
                     height: 42px;
                     background: transparent;
@@ -885,6 +914,7 @@ export component AppWindow inherits Window {
 
                     TouchArea {
                         clicked => {
+                            SoundEvents.tap();
                             root.screen = "about";
                         }
                     }
@@ -1108,6 +1138,7 @@ export component AppWindow inherits Window {
                     accessible-role: button;
                     accessible-label: "クイズを中断";
                     accessible-action-default => {
+                        SoundEvents.tap();
                         root.quit-confirmation-open = true;
                     }
 
@@ -1124,6 +1155,7 @@ export component AppWindow inherits Window {
 
                     TouchArea {
                         clicked => {
+                            SoundEvents.tap();
                             root.quit-confirmation-open = true;
                         }
                     }
