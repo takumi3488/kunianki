@@ -1107,6 +1107,43 @@ fn map_answer_and_next_are_touchable_on_phone_widths() -> Result<(), Box<dyn Err
 }
 
 #[test]
+fn start_round_button_is_touchable_on_duo_and_other_screens() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    // Surface Duo single screen (portrait, portrait minus system bars, landscape),
+    // Duo spanned across both screens, a small phone, a phone, a tablet, and a desktop.
+    for (width, height) in [
+        (540_u16, 720_u16),
+        (540, 648),
+        (720, 540),
+        (1114, 720),
+        (720, 1114),
+        (320, 568),
+        (390, 844),
+        (768, 1024),
+        (1280, 800),
+    ] {
+        let progress = TestProgress::new()?;
+        let app = test_app(&progress)?;
+        app.window().set_size(slint::PhysicalSize::new(
+            u32::from(width),
+            u32::from(height),
+        ));
+        settle();
+        tap(&app, "クイズを始める")?;
+        settle();
+        let start = accessible_button(&app, "10問を始める")?;
+        assert_inside_window(&start, f32::from(width), f32::from(height));
+        start.mock_single_click(PointerEventButton::Left);
+        assert_eq!(
+            app.get_screen().as_str(),
+            "quiz",
+            "10問を始める should start a round at {width}x{height}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn map_review_round_starts_at_default_zoom() -> Result<(), Box<dyn Error>> {
     i_slint_backend_testing::init_no_event_loop();
     let progress = TestProgress::new()?;
