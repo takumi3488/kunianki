@@ -654,117 +654,130 @@ export component AppWindow inherits Window {
                 }
             }
 
+            // Shrinks the hero first so the actions and footer stay on short screens.
             Rectangle {
-                height: 24px;
-                background: transparent;
-            }
+                min-height: 0px;
+                preferred-height: home-hero-content.preferred-height;
+                max-height: home-hero-content.preferred-height;
+                vertical-stretch: 1;
 
-            Text {
-                text: "世界のかたちを、\n国から知る。";
-                color: AtlasColors.ink;
-                font-size: 27px;
-                font-weight: 700;
-                line-height-factor: 1.25;
-            }
+                Flickable {
+                    content-height: home-hero-content.preferred-height;
 
-            Rectangle {
-                height: 16px;
-                background: transparent;
-            }
-
-            Rectangle {
-                height: 254px;
-                border-radius: 25px;
-                background: AtlasColors.ink;
-                clip: true;
-
-                Rectangle {
-                    x: 232px;
-                    y: -32px;
-                    width: 190px;
-                    height: 190px;
-                    border-radius: 95px;
-                    border-width: 1px;
-                    border-color: #66838a;
-                    background: transparent;
-                }
-
-                Rectangle {
-                    x: 273px;
-                    y: 10px;
-                    width: 108px;
-                    height: 108px;
-                    border-radius: 54px;
-                    border-width: 1px;
-                    border-color: #66838a;
-                    background: transparent;
-                }
-
-                Rectangle {
-                    x: 315px;
-                    y: 51px;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 12px;
-                    background: AtlasColors.accent;
-                }
-
-                VerticalLayout {
-                    padding: 22px;
-                    spacing: 0px;
-
-                    Text {
-                        text: "旗・地図・3つのヒント";
-                        color: AtlasColors.sea;
-                        font-size: 13px;
-                        font-weight: 600;
-                    }
-
-                    Rectangle {
-                        height: 12px;
-                        background: transparent;
-                    }
-
-                    Text {
-                        text: "見つけて、\n覚えていく。";
-                        color: #ffffff;
-                        font-size: 25px;
-                        font-weight: 700;
-                        line-height-factor: 1.2;
-                    }
-
-                    Rectangle {
-                        height: 12px;
-                        background: transparent;
-                    }
-
-                    Rectangle {
-                        width: 34px;
-                        height: 4px;
-                        border-radius: 2px;
-                        background: AtlasColors.accent;
-                    }
-
-                    Rectangle {
-                        vertical-stretch: 1;
-                        background: transparent;
-                    }
-
-                    HorizontalLayout {
-                        spacing: 10px;
+                    home-hero-content := VerticalLayout {
+                        width: parent.width;
+                        padding-top: 24px;
+                        spacing: 0px;
 
                         Text {
-                            text: "193";
-                            color: #ffffff;
-                            font-size: 30px;
-                            font-weight: 800;
+                            text: "世界のかたちを、\n国から知る。";
+                            color: AtlasColors.ink;
+                            font-size: 27px;
+                            font-weight: 700;
+                            line-height-factor: 1.25;
                         }
 
-                        Text {
-                            text: "か国をめぐる、10問の旅";
-                            color: AtlasColors.sea;
-                            font-size: 12px;
-                            vertical-alignment: center;
+                        Rectangle {
+                            height: 16px;
+                            background: transparent;
+                        }
+
+                        Rectangle {
+                            height: 254px;
+                            border-radius: 25px;
+                            background: AtlasColors.ink;
+                            clip: true;
+
+                            Rectangle {
+                                x: 232px;
+                                y: -32px;
+                                width: 190px;
+                                height: 190px;
+                                border-radius: 95px;
+                                border-width: 1px;
+                                border-color: #66838a;
+                                background: transparent;
+                            }
+
+                            Rectangle {
+                                x: 273px;
+                                y: 10px;
+                                width: 108px;
+                                height: 108px;
+                                border-radius: 54px;
+                                border-width: 1px;
+                                border-color: #66838a;
+                                background: transparent;
+                            }
+
+                            Rectangle {
+                                x: 315px;
+                                y: 51px;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 12px;
+                                background: AtlasColors.accent;
+                            }
+
+                            VerticalLayout {
+                                padding: 22px;
+                                spacing: 0px;
+
+                                Text {
+                                    text: "旗・地図・3つのヒント";
+                                    color: AtlasColors.sea;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                }
+
+                                Rectangle {
+                                    height: 12px;
+                                    background: transparent;
+                                }
+
+                                Text {
+                                    text: "見つけて、\n覚えていく。";
+                                    color: #ffffff;
+                                    font-size: 25px;
+                                    font-weight: 700;
+                                    line-height-factor: 1.2;
+                                }
+
+                                Rectangle {
+                                    height: 12px;
+                                    background: transparent;
+                                }
+
+                                Rectangle {
+                                    width: 34px;
+                                    height: 4px;
+                                    border-radius: 2px;
+                                    background: AtlasColors.accent;
+                                }
+
+                                Rectangle {
+                                    vertical-stretch: 1;
+                                    background: transparent;
+                                }
+
+                                HorizontalLayout {
+                                    spacing: 10px;
+
+                                    Text {
+                                        text: "193";
+                                        color: #ffffff;
+                                        font-size: 30px;
+                                        font-weight: 800;
+                                    }
+
+                                    Text {
+                                        text: "か国をめぐる、10問の旅";
+                                        color: AtlasColors.sea;
+                                        font-size: 12px;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
