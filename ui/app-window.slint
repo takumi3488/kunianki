@@ -606,12 +606,18 @@ export component AppWindow inherits Window {
 
     private property <int> chosen-mode: 0;
     private property <int> chosen-region: 0;
-    // Short landscape screens (e.g. Surface Duo single screen sideways) use two columns
-    // so nothing has to be cut off mid-element.
+    // Short screens (below 640dp of usable height) tighten spacing so nothing is cut off
+    // mid-element; short landscape screens (e.g. Surface Duo single screen sideways) also
+    // use two columns.
+    private property <bool> compact-height:
+        root.height - root.safe-area-insets.top - root.safe-area-insets.bottom < 640px;
     private property <bool> compact-landscape:
-        root.width - root.safe-area-insets.left - root.safe-area-insets.right
-        > root.height - root.safe-area-insets.top - root.safe-area-insets.bottom
-        && root.height - root.safe-area-insets.top - root.safe-area-insets.bottom < 640px;
+        root.compact-height
+        && root.width - root.safe-area-insets.left - root.safe-area-insets.right
+        > root.height - root.safe-area-insets.top - root.safe-area-insets.bottom;
+    private property <bool> compact-portrait: root.compact-height && !root.compact-landscape;
+    private property <length> mode-tile-height: root.compact-portrait ? 44px : 54px;
+    private property <length> region-tile-height: root.compact-portrait ? 38px : 42px;
     private property <bool> wide-map-layout:
         root.width - root.safe-area-insets.left - root.safe-area-insets.right >= 760px
         && root.width - root.safe-area-insets.left - root.safe-area-insets.right
@@ -678,28 +684,31 @@ export component AppWindow inherits Window {
                     vertical-stretch: 1;
 
                     Flickable {
-                        content-height: home-hero-content.preferred-height;
+                        content-height: home-hero-content.height;
 
+                        // The card gives up height down to its content's minimum before the hero scrolls.
                         home-hero-content := VerticalLayout {
                             width: parent.width;
-                            padding-top: root.compact-landscape ? 12px : 24px;
+                            height: max(self.min-height, parent.height);
+                            padding-top: root.compact-height ? 12px : 24px;
                             spacing: 0px;
 
                             Text {
                                 text: "世界のかたちを、\n国から知る。";
                                 color: AtlasColors.ink;
-                                font-size: 27px;
+                                font-size: root.compact-portrait ? 22px : 27px;
                                 font-weight: 700;
                                 line-height-factor: 1.25;
                             }
 
                             Rectangle {
-                                height: 16px;
+                                height: root.compact-portrait ? 10px : 16px;
                                 background: transparent;
                             }
 
                             Rectangle {
-                                height: 254px;
+                                min-height: home-card-content.min-height;
+                                preferred-height: 254px;
                                 border-radius: 25px;
                                 background: AtlasColors.ink;
                                 clip: true;
@@ -736,8 +745,8 @@ export component AppWindow inherits Window {
                                     background: AtlasColors.accent;
                                 }
 
-                                VerticalLayout {
-                                    padding: 22px;
+                                home-card-content := VerticalLayout {
+                                    padding: root.compact-portrait ? 16px : 22px;
                                     spacing: 0px;
 
                                     Text {
@@ -748,20 +757,20 @@ export component AppWindow inherits Window {
                                     }
 
                                     Rectangle {
-                                        height: 12px;
+                                        height: root.compact-portrait ? 6px : 12px;
                                         background: transparent;
                                     }
 
                                     Text {
                                         text: "見つけて、\n覚えていく。";
                                         color: #ffffff;
-                                        font-size: 25px;
+                                        font-size: root.compact-portrait ? 21px : 25px;
                                         font-weight: 700;
                                         line-height-factor: 1.2;
                                     }
 
                                     Rectangle {
-                                        height: 12px;
+                                        height: root.compact-portrait ? 6px : 12px;
                                         background: transparent;
                                     }
 
@@ -783,7 +792,7 @@ export component AppWindow inherits Window {
                                         Text {
                                             text: "193";
                                             color: #ffffff;
-                                            font-size: 30px;
+                                            font-size: root.compact-portrait ? 24px : 30px;
                                             font-weight: 800;
                                         }
 
@@ -978,7 +987,7 @@ export component AppWindow inherits Window {
                 vertical-stretch: 1;
                 vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
                 mouse-drag-pan-enabled: true;
-                viewport-height: select-content.height;
+                content-height: select-content.height;
 
                 select-content := Rectangle {
                     width: select-options.visible-width;
@@ -991,30 +1000,30 @@ export component AppWindow inherits Window {
                         y: 0px;
                         width: root.compact-landscape ? (parent.width - 20px) / 2 : parent.width;
                         height: self.preferred-height;
-                        padding-top: 10px;
+                        padding-top: root.compact-portrait ? 4px : 10px;
                         padding-bottom: root.compact-landscape ? 12px : 0px;
                         spacing: 0px;
 
                         Text {
                             text: "どんな方法で覚える？";
                             color: AtlasColors.ink;
-                            font-size: 23px;
+                            font-size: root.compact-portrait ? 20px : 23px;
                             font-weight: 700;
                         }
 
-                        Rectangle {
+                        if !root.compact-portrait: Rectangle {
                             height: 6px;
                             background: transparent;
                         }
 
-                        Text {
+                        if !root.compact-portrait: Text {
                             text: "出題方法と地域を選んでください";
                             color: AtlasColors.muted;
                             font-size: 13px;
                         }
 
                         Rectangle {
-                            height: 22px;
+                            height: root.compact-portrait ? 10px : 22px;
                             background: transparent;
                         }
 
@@ -1037,14 +1046,14 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "国旗";
                                     selected: root.chosen-mode == 0;
-                                    tile-height: 54px;
+                                    tile-height: root.mode-tile-height;
                                     tapped => { root.chosen-mode = 0; }
                                 }
 
                                 OptionTile {
                                     label: "地図";
                                     selected: root.chosen-mode == 1;
-                                    tile-height: 54px;
+                                    tile-height: root.mode-tile-height;
                                     tapped => { root.chosen-mode = 1; }
                                 }
                             }
@@ -1053,14 +1062,14 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "3ヒント";
                                     selected: root.chosen-mode == 2;
-                                    tile-height: 54px;
+                                    tile-height: root.mode-tile-height;
                                     tapped => { root.chosen-mode = 2; }
                                 }
 
                                 OptionTile {
                                     label: "おまかせ";
                                     selected: root.chosen-mode == 3;
-                                    tile-height: 54px;
+                                    tile-height: root.mode-tile-height;
                                     tapped => { root.chosen-mode = 3; }
                                 }
                             }
@@ -1072,8 +1081,8 @@ export component AppWindow inherits Window {
                         y: root.compact-landscape ? 0px : select-intro.height;
                         width: select-intro.width;
                         height: self.preferred-height;
-                        padding-top: root.compact-landscape ? 10px : 20px;
-                        padding-bottom: 12px;
+                        padding-top: root.compact-landscape ? 10px : root.compact-portrait ? 12px : 20px;
+                        padding-bottom: root.compact-portrait ? 0px : 12px;
                         spacing: 0px;
 
                         Text {
@@ -1095,14 +1104,14 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "全地域";
                                     selected: root.chosen-region == 0;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 0; }
                                 }
 
                                 OptionTile {
                                     label: "アジア";
                                     selected: root.chosen-region == 1;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 1; }
                                 }
                             }
@@ -1111,14 +1120,14 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "ヨーロッパ";
                                     selected: root.chosen-region == 2;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 2; }
                                 }
 
                                 OptionTile {
                                     label: "アフリカ";
                                     selected: root.chosen-region == 3;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 3; }
                                 }
                             }
@@ -1127,14 +1136,14 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "北米・中米";
                                     selected: root.chosen-region == 4;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 4; }
                                 }
 
                                 OptionTile {
                                     label: "南米";
                                     selected: root.chosen-region == 5;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 5; }
                                 }
                             }
@@ -1143,7 +1152,7 @@ export component AppWindow inherits Window {
                                 OptionTile {
                                     label: "オセアニア";
                                     selected: root.chosen-region == 6;
-                                    tile-height: 42px;
+                                    tile-height: root.region-tile-height;
                                     tapped => { root.chosen-region = 6; }
                                 }
                             }
