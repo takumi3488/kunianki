@@ -1106,22 +1106,24 @@ fn map_answer_and_next_are_touchable_on_phone_widths() -> Result<(), Box<dyn Err
     Ok(())
 }
 
+// Surface Duo single screen (portrait, portrait minus system bars, landscape),
+// Duo spanned across both screens, a small phone, a phone, a tablet, and a desktop.
+const SCREEN_SIZES: [(u16, u16); 9] = [
+    (540, 720),
+    (540, 648),
+    (720, 540),
+    (1114, 720),
+    (720, 1114),
+    (320, 568),
+    (390, 844),
+    (768, 1024),
+    (1280, 800),
+];
+
 #[test]
 fn start_round_button_is_touchable_on_duo_and_other_screens() -> Result<(), Box<dyn Error>> {
     i_slint_backend_testing::init_no_event_loop();
-    // Surface Duo single screen (portrait, portrait minus system bars, landscape),
-    // Duo spanned across both screens, a small phone, a phone, a tablet, and a desktop.
-    for (width, height) in [
-        (540_u16, 720_u16),
-        (540, 648),
-        (720, 540),
-        (1114, 720),
-        (720, 1114),
-        (320, 568),
-        (390, 844),
-        (768, 1024),
-        (1280, 800),
-    ] {
+    for (width, height) in SCREEN_SIZES {
         let progress = TestProgress::new()?;
         let app = test_app(&progress)?;
         app.window().set_size(slint::PhysicalSize::new(
@@ -1139,6 +1141,46 @@ fn start_round_button_is_touchable_on_duo_and_other_screens() -> Result<(), Box<
             "quiz",
             "10問を始める should start a round at {width}x{height}"
         );
+    }
+    Ok(())
+}
+
+#[test]
+fn home_actions_are_touchable_on_duo_and_other_screens() -> Result<(), Box<dyn Error>> {
+    i_slint_backend_testing::init_no_event_loop();
+    let progress = TestProgress::new()?;
+    let first_app = test_app(&progress)?;
+    start_round(&first_app, "国旗", "全地域")?;
+    finish_flag_round(&first_app)?;
+    let review_label = format!("まちがえた国を復習、{}問", first_app.get_review_count());
+    assert!(
+        first_app.get_review_count() > 0,
+        "the review tile must be enabled"
+    );
+    drop(first_app);
+
+    for (width, height) in SCREEN_SIZES {
+        for (label, screen) in [
+            ("クイズを始める", "select"),
+            (review_label.as_str(), "quiz"),
+            ("回答履歴を見る", "history"),
+            ("このアプリについて", "about"),
+        ] {
+            let app = test_app(&progress)?;
+            app.window().set_size(slint::PhysicalSize::new(
+                u32::from(width),
+                u32::from(height),
+            ));
+            settle();
+            let button = accessible_button(&app, label)?;
+            assert_inside_window(&button, f32::from(width), f32::from(height));
+            button.mock_single_click(PointerEventButton::Left);
+            assert_eq!(
+                app.get_screen().as_str(),
+                screen,
+                "{label} should open {screen} at {width}x{height}"
+            );
+        }
     }
     Ok(())
 }
